@@ -60,13 +60,7 @@ public class pm160695_BuyerOperations extends OperationImplementation implements
 			
 			PreparedStatement selectStmt = this.getStatementHandler().prepareSelectStatement(connection, query, parameters);
 			
-			List<Integer> resultList = this.getStatementHandler().executeSelectStatement(selectStmt);
-			if (resultList.isEmpty() || resultList.size() > 1) {
-				return -1;
-			}
-			else {
-				return resultList.get(0);
-			}
+			return this.getStatementHandler().executeIntegerSelectStatement(selectStmt);
 		} catch (SQLException e) {
 			e.printStackTrace();
 			return -1;
@@ -75,14 +69,35 @@ public class pm160695_BuyerOperations extends OperationImplementation implements
 
 	@Override
 	public BigDecimal increaseCredit(int buyerId, BigDecimal credit) {
-		// TODO Auto-generated method stub
-		return null;
+		try (Connection connection = DriverManager.getConnection(this.getConnectionString())) {
+			String query = "update Buyer set balance = balance + ? where id = ?";
+			
+			List<ParameterPair> parameters = new LinkedList<>();
+			parameters.add(new ParameterPair("BigDecimal", credit.toString()));
+			parameters.add(new ParameterPair("int", Integer.toString(buyerId)));
+			
+			PreparedStatement updateStmt = this.getStatementHandler().prepareUpdateStatement(connection, query, parameters);
+			
+			this.getStatementHandler().executeUpdateStatementAndGetId(updateStmt);
+			
+			parameters.clear();
+			query = "select balance from Buyer where id = ?";
+			
+			parameters.add(new ParameterPair("int", Integer.toString(buyerId)));
+			
+			PreparedStatement selectStmt = this.getStatementHandler().prepareSelectStatement(connection, query, parameters);
+			
+			return this.getStatementHandler().executeBigDecimalSelectStatement(selectStmt);
+		} catch (SQLException e) {
+			e.printStackTrace();
+			return null;
+		}
 	}
 
 	@Override
 	public int createOrder(int buyerId) {
 		try (Connection connection = DriverManager.getConnection(this.getConnectionString())) {
-			String query = "insert into Order (buyerId) values (?)";
+			String query = "insert into [Order] (buyerId) values (?)";
 			
 			List<ParameterPair> parameters = new LinkedList<>();
 			parameters.add(new ParameterPair("int", Integer.toString(buyerId)));
@@ -99,14 +114,14 @@ public class pm160695_BuyerOperations extends OperationImplementation implements
 	@Override
 	public List<Integer> getOrders(int buyerId) {
 		try (Connection connection = DriverManager.getConnection(this.getConnectionString())) {
-			String query = "select id from Order where buyerId = ?";
+			String query = "select id from [Order] where buyerId = ?";
 			
 			List<ParameterPair> parameters = new LinkedList<>();
 			parameters.add(new ParameterPair("int", Integer.toString(buyerId)));
 			
 			PreparedStatement selectStmt = this.getStatementHandler().prepareSelectStatement(connection, query, parameters);
 			
-			return this.getStatementHandler().executeSelectStatement(selectStmt);
+			return this.getStatementHandler().executeIntegerListSelectStatement(selectStmt);
 		} catch (SQLException e) {
 			e.printStackTrace();
 			return null;

@@ -71,11 +71,7 @@ public class pm160695_ShopOperations extends OperationImplementation implements 
 			
 			PreparedStatement selectStmt = this.getStatementHandler().prepareSelectStatement(connection, query, parameters);
 			
-			List<Integer> resultList = this.getStatementHandler().executeSelectStatement(selectStmt);
-			if (resultList.isEmpty() || resultList.size() > 1) {
-				return -1;
-			}
-			return resultList.get(0);
+			return this.getStatementHandler().executeIntegerSelectStatement(selectStmt);
 		} catch (SQLException e) {
 			e.printStackTrace();
 			return -1;
@@ -111,7 +107,7 @@ public class pm160695_ShopOperations extends OperationImplementation implements 
 	@Override
 	public int getArticleCount(int shopId, int articleId) {
 		try (Connection connection = DriverManager.getConnection(this.getConnectionString())) {
-			String query = "select itemsAvailable from Article where shopId = ? and articleId = ?";
+			String query = "select itemsAvailable from Article where shopId = ? and id = ?";
 			
 			List<ParameterPair> parameters = new LinkedList<>();
 			parameters.add(new ParameterPair("int", Integer.toString(shopId)));
@@ -119,13 +115,7 @@ public class pm160695_ShopOperations extends OperationImplementation implements 
 			
 			PreparedStatement selectStmt = this.getStatementHandler().prepareSelectStatement(connection, query, parameters);
 			
-			List<Integer> resultList = this.getStatementHandler().executeSelectStatement(selectStmt);
-			if (resultList.isEmpty() || resultList.size() > 1) {
-				return -1;
-			}
-			else {
-				return resultList.get(0);
-			}
+			return this.getStatementHandler().executeIntegerSelectStatement(selectStmt);
 		} catch (SQLException e) {
 			e.printStackTrace();
 			return -1;
@@ -142,7 +132,7 @@ public class pm160695_ShopOperations extends OperationImplementation implements 
 			
 			PreparedStatement selectStmt = this.getStatementHandler().prepareSelectStatement(connection, query, parameters);
 			
-			return this.getStatementHandler().executeSelectStatement(selectStmt);
+			return this.getStatementHandler().executeIntegerListSelectStatement(selectStmt);
 		} catch (SQLException e) {
 			e.printStackTrace();
 			return null;
@@ -159,7 +149,7 @@ public class pm160695_ShopOperations extends OperationImplementation implements 
 			
 			PreparedStatement selectStmt = this.getStatementHandler().prepareSelectStatement(connection, query, parameters);
 			
-			List<Integer> resultList = this.getStatementHandler().executeSelectStatement(selectStmt);
+			List<Integer> resultList = this.getStatementHandler().executeIntegerListSelectStatement(selectStmt);
 			if (resultList.isEmpty() || resultList.size() > 1) {
 				// nije definisano postavkom, pa uzimamo da vraca -1 kao i kod svih ostalih gresaka
 				return -1;

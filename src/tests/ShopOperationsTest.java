@@ -1,6 +1,11 @@
 package tests;
 
 import operations.*;
+import student.pm160695_ArticleOperations;
+import student.pm160695_CityOperations;
+import student.pm160695_GeneralOperations;
+import student.pm160695_ShopOperations;
+
 import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
@@ -20,19 +25,23 @@ public class ShopOperationsTest {
 
     @Before
     public void setUp() throws Exception {
-        this.testHandler = TestHandler.getInstance();
-        Assert.assertNotNull(this.testHandler);
+        //this.testHandler = TestHandler.getInstance();
+        //Assert.assertNotNull(this.testHandler);
 
-        this.shopOperations = this.testHandler.getShopOperations();
+        //this.shopOperations = this.testHandler.getShopOperations();
+    	this.shopOperations = new pm160695_ShopOperations();
         Assert.assertNotNull(this.shopOperations);
 
-        this.cityOperations = this.testHandler.getCityOperations();
+        //this.cityOperations = this.testHandler.getCityOperations();
+        this.cityOperations = new pm160695_CityOperations();
         Assert.assertNotNull(this.cityOperations);
 
-        this.articleOperations = this.testHandler.getArticleOperations();
+        //this.articleOperations = this.testHandler.getArticleOperations();
+        this.articleOperations = new pm160695_ArticleOperations();
         Assert.assertNotNull(this.articleOperations);
 
-        generalOperations = testHandler.getGeneralOperations();
+        //generalOperations = testHandler.getGeneralOperations();
+        this.generalOperations = new pm160695_GeneralOperations();
         Assert.assertNotNull(generalOperations);
 
         generalOperations.eraseAll();

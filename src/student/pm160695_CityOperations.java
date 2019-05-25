@@ -34,7 +34,7 @@ public class pm160695_CityOperations extends OperationImplementation implements 
 			String query = "select id from City";
 			PreparedStatement selectStmt = this.getStatementHandler().prepareSelectStatement(connection, query, null);
 			
-			return this.getStatementHandler().executeSelectStatement(selectStmt);
+			return this.getStatementHandler().executeIntegerListSelectStatement(selectStmt);
 		} catch (SQLException e) {
 			e.printStackTrace();
 			return null;
@@ -63,15 +63,22 @@ public class pm160695_CityOperations extends OperationImplementation implements 
 	@Override
 	public List<Integer> getConnectedCities(int cityId) {
 		try (Connection connection = DriverManager.getConnection(this.getConnectionString())) {
-			String query = "select * from Line where cityId1 = ? or cityId2 = ?";
+			String query = "select cityId1 from Line where cityId2 = ?";
 			
 			List<ParameterPair> parameters = new LinkedList<>();
-			parameters.add(new ParameterPair("int", Integer.toString(cityId)));
 			parameters.add(new ParameterPair("int", Integer.toString(cityId)));
 			
 			PreparedStatement selectStmt = this.getStatementHandler().prepareSelectStatement(connection, query, parameters);
 			
-			return this.getStatementHandler().executeSelectStatement(selectStmt);
+			List<Integer> returnList = this.getStatementHandler().executeIntegerListSelectStatement(selectStmt);
+			
+			query = "select cityId2 from Line where cityId1 = ?";
+			
+			selectStmt = this.getStatementHandler().prepareSelectStatement(connection, query, parameters);
+			
+			returnList.addAll(this.getStatementHandler().executeIntegerListSelectStatement(selectStmt));
+			
+			return returnList;
 		} catch (SQLException e) {
 			e.printStackTrace();
 			return null;
@@ -88,7 +95,7 @@ public class pm160695_CityOperations extends OperationImplementation implements 
 			
 			PreparedStatement selectStmt = this.getStatementHandler().prepareSelectStatement(connection, query, parameters);
 			
-			return this.getStatementHandler().executeSelectStatement(selectStmt);
+			return this.getStatementHandler().executeIntegerListSelectStatement(selectStmt);
 		} catch (SQLException e) {
 			e.printStackTrace();
 			return null;
@@ -104,13 +111,7 @@ public class pm160695_CityOperations extends OperationImplementation implements 
 			
 			PreparedStatement selectStmt = this.getStatementHandler().prepareUpdateStatement(connection, query, parameters);
 
-			List<Integer> resultList = this.getStatementHandler().executeSelectStatement(selectStmt);
-			if (resultList.isEmpty() || resultList.size() > 1) {
-				return -1;
-			}
-			else {
-				return resultList.get(0);
-			}
+			return this.getStatementHandler().executeIntegerSelectStatement(selectStmt);
 		} catch (SQLException e) {
 			e.printStackTrace();
 			return -1;

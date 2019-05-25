@@ -1,16 +1,12 @@
 package tests;
 
-import operations.CityOperations;
 import operations.GeneralOperations;
-import operations.ShopOperations;
 import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 
-import java.sql.Time;
 import java.util.Calendar;
-import java.util.List;
 
 public class GeneralOperationsTest {
 

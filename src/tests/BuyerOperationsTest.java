@@ -3,6 +3,10 @@ package tests;
 import operations.BuyerOperations;
 import operations.CityOperations;
 import operations.GeneralOperations;
+import student.pm160695_BuyerOperations;
+import student.pm160695_CityOperations;
+import student.pm160695_GeneralOperations;
+
 import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
@@ -21,16 +25,19 @@ public class BuyerOperationsTest {
 
     @Before
     public void setUp() throws Exception {
-        this.testHandler = TestHandler.getInstance();
-        Assert.assertNotNull(this.testHandler);
+        //this.testHandler = TestHandler.getInstance();
+        //Assert.assertNotNull(this.testHandler);
 
-        this.cityOperations = this.testHandler.getCityOperations();
+        //this.cityOperations = this.testHandler.getCityOperations();
+    	this.cityOperations = new pm160695_CityOperations();
         Assert.assertNotNull(this.cityOperations);
 
-        generalOperations = testHandler.getGeneralOperations();
+        //generalOperations = testHandler.getGeneralOperations();
+        this.generalOperations = new pm160695_GeneralOperations();
         Assert.assertNotNull(generalOperations);
 
-        buyerOperations = testHandler.getBuyerOperations();
+        //buyerOperations = testHandler.getBuyerOperations();
+        this.buyerOperations = new pm160695_BuyerOperations();
         Assert.assertNotNull(buyerOperations);
 
         generalOperations.eraseAll();
@@ -62,16 +69,16 @@ public class BuyerOperationsTest {
     }
 
     @Test
-    void credit(){
+    public void credit(){
         int cityId = cityOperations.createCity("Kragujevac");
         int buyerId = buyerOperations.createBuyer("Pera", cityId);
 
-        BigDecimal credit1 = new BigDecimal("1000");
+        BigDecimal credit1 = new BigDecimal("1000.000");
 
         BigDecimal creditReturned = buyerOperations.increaseCredit(buyerId, credit1);
         Assert.assertEquals(credit1, creditReturned);
 
-        BigDecimal credit2 = new BigDecimal("500");
+        BigDecimal credit2 = new BigDecimal("500.000");
         buyerOperations.increaseCredit(buyerId, credit2);
 
         creditReturned = buyerOperations.getCredit(buyerId);
@@ -79,7 +86,7 @@ public class BuyerOperationsTest {
     }
 
     @Test
-    void orders(){
+    public void orders(){
         int cityId = cityOperations.createCity("Kragujevac");
         int buyerId = buyerOperations.createBuyer("Pera", cityId);
 

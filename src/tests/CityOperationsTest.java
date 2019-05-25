@@ -1,15 +1,17 @@
 package tests;
 
-import operations.BuyerOperations;
 import operations.CityOperations;
 import operations.GeneralOperations;
 import operations.ShopOperations;
+import student.pm160695_CityOperations;
+import student.pm160695_GeneralOperations;
+import student.pm160695_ShopOperations;
+
 import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 
-import java.math.BigDecimal;
 import java.util.List;
 
 public class CityOperationsTest {
@@ -22,17 +24,20 @@ public class CityOperationsTest {
 
     @Before
     public void setUp() throws Exception {
-        this.testHandler = TestHandler.getInstance();
-        Assert.assertNotNull(this.testHandler);
+//        this.testHandler = TestHandler.getInstance();
+//        Assert.assertNotNull(this.testHandler);
 
-        this.cityOperations = this.testHandler.getCityOperations();
+        //this.cityOperations = this.testHandler.getCityOperations();
+    	this.cityOperations = new pm160695_CityOperations();
         Assert.assertNotNull(this.cityOperations);
 
-        generalOperations = testHandler.getGeneralOperations();
+        //generalOperations = testHandler.getGeneralOperations();
+        this.generalOperations = new pm160695_GeneralOperations();
         Assert.assertNotNull(generalOperations);
 
 
-        this.shopOperations = this.testHandler.getShopOperations();
+        //this.shopOperations = this.testHandler.getShopOperations();
+        this.shopOperations = new pm160695_ShopOperations();
         Assert.assertNotNull(this.shopOperations);
 
         generalOperations.eraseAll();
