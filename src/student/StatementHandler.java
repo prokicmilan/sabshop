@@ -1,5 +1,6 @@
 package student;
 
+import java.math.BigDecimal;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
@@ -26,10 +27,10 @@ public class StatementHandler {
 		return selectStatment;
 	}
 	
-	public PreparedStatement prepareInsertStatement(Connection connection, String query, List<ParameterPair> parameters) throws SQLException {
-		PreparedStatement insertStatement = connection.prepareStatement(query, Statement.RETURN_GENERATED_KEYS);
-		this.setParameters(insertStatement, parameters);
-		return insertStatement;
+	public PreparedStatement prepareUpdateStatement(Connection connection, String query, List<ParameterPair> parameters) throws SQLException {
+		PreparedStatement updateStatement = connection.prepareStatement(query, Statement.RETURN_GENERATED_KEYS);
+		this.setParameters(updateStatement, parameters);
+		return updateStatement;
 	}
 	
 	public List<Integer> executeSelectStatement(PreparedStatement selectStmt) throws SQLException {
@@ -37,13 +38,29 @@ public class StatementHandler {
 		
 		try (ResultSet rs = selectStmt.executeQuery()) {
 			while (rs.next()) {
-				resultList.add(rs.getInt("id"));
+				resultList.add(rs.getInt(1));
 			}
 		}
 		return resultList;
 	}
 	
-	public int executeInsertStatementAndGetId(PreparedStatement insertStmt) throws SQLException {
+	public BigDecimal executeBigDecimalSelectStatement(PreparedStatement selectStmt) throws SQLException {
+		List<BigDecimal> resultList = new LinkedList<>();
+		
+		try (ResultSet rs = selectStmt.executeQuery()) {
+			while (rs.next()) {
+				resultList.add(rs.getBigDecimal(1));
+			}
+		}
+		if (resultList.isEmpty() || resultList.size() > 1) {
+			return null;
+		}
+		else {
+			return resultList.get(0);
+		}
+	}
+	
+	public int executeUpdateStatementAndGetId(PreparedStatement insertStmt) throws SQLException {
 		int affectedRows = insertStmt.executeUpdate();
 		
 		if (affectedRows == 1) {
@@ -57,7 +74,7 @@ public class StatementHandler {
 		return -1;
 	}
 	
-	public List<Integer> executeInsertStatementAndGetIdList(PreparedStatement insertStatement) throws SQLException {
+	public List<Integer> executeUpdateStatementAndGetIdList(PreparedStatement insertStatement) throws SQLException {
 		List<Integer> generatedKeysList = new LinkedList<>();
 		
 		insertStatement.executeUpdate();

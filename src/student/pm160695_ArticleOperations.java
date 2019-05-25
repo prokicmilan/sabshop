@@ -9,19 +9,11 @@ import java.util.List;
 
 import operations.ArticleOperations;
 
-public class pm160695_ArticleOperations implements ArticleOperations {
-
-	private StatementHandler statementHandler;
-	private String connectionString;
-	
-	public pm160695_ArticleOperations() {
-		this.connectionString = ResourceManager.getConnectionString();
-		this.statementHandler = StatementHandler.getInstance();
-	}
+public class pm160695_ArticleOperations extends OperationImplementation implements ArticleOperations {
 	
 	@Override
 	public int createArticle(int shopId, String articleName, int articlePrice) {
-		try (Connection connection = DriverManager.getConnection(connectionString)) {
+		try (Connection connection = DriverManager.getConnection(this.getConnectionString())) {
 			String query = "insert into Article (shopId, articleName, price) values (?, ?, ?)";
 			
 			List<ParameterPair> parameters = new LinkedList<>();
@@ -29,9 +21,9 @@ public class pm160695_ArticleOperations implements ArticleOperations {
 			parameters.add(new ParameterPair("String", articleName));
 			parameters.add(new ParameterPair("int", Integer.toString(articlePrice)));
 			
-			PreparedStatement insertStmt = this.statementHandler.prepareInsertStatement(connection, query, parameters);
+			PreparedStatement insertStmt = this.getStatementHandler().prepareUpdateStatement(connection, query, parameters);
 
-			return this.statementHandler.executeInsertStatementAndGetId(insertStmt);
+			return this.getStatementHandler().executeUpdateStatementAndGetId(insertStmt);
 		} catch (SQLException e) {
 			e.printStackTrace();
 		}
