@@ -3,38 +3,35 @@ package student;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.PreparedStatement;
-import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.sql.Statement;
+import java.util.LinkedList;
+import java.util.List;
 
 import operations.ArticleOperations;
 
 public class pm160695_ArticleOperations implements ArticleOperations {
 
+	private StatementHandler statementHandler;
+	private String connectionString;
+	
+	public pm160695_ArticleOperations() {
+		this.connectionString = ResourceManager.getConnectionString();
+		this.statementHandler = StatementHandler.getInstance();
+	}
+	
 	@Override
 	public int createArticle(int shopId, String articleName, int articlePrice) {
-		String connectionString = ResourceManager.getConnectionString();
-		try (Connection conn = DriverManager.getConnection(connectionString)) {
-			PreparedStatement insertStmt = conn.prepareStatement("insert into Article (shopId, articleName, price) values (?, ?, ?)",
-																 Statement.RETURN_GENERATED_KEYS);
+		try (Connection connection = DriverManager.getConnection(connectionString)) {
+			String query = "insert into Article (shopId, articleName, price) values (?, ?, ?)";
 			
-			insertStmt.setInt(1, shopId);
-			insertStmt.setString(2, articleName);
-			insertStmt.setInt(3, articlePrice);
+			List<ParameterPair> parameters = new LinkedList<>();
+			parameters.add(new ParameterPair("int", Integer.toString(shopId)));
+			parameters.add(new ParameterPair("String", articleName));
+			parameters.add(new ParameterPair("int", Integer.toString(articlePrice)));
 			
-			int affectedRows = insertStmt.executeUpdate();
-			if (affectedRows == 1) {
-				ResultSet rs = insertStmt.getGeneratedKeys();
-				if (rs.next()) {
-					return rs.getInt(1);
-				}
-				else {
-					return -1;
-				}
-			}
-			else {
-				return -1;
-			}
+			PreparedStatement insertStmt = this.statementHandler.prepareInsertStatement(connection, query, parameters);
+
+			return this.statementHandler.executeInsertStatementAndGetId(insertStmt);
 		} catch (SQLException e) {
 			e.printStackTrace();
 		}

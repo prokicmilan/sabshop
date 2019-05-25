@@ -6,7 +6,8 @@ public class StudentMain {
 	public static void main(String[] args) {
 		ArticleOperations articleOps = new pm160695_ArticleOperations();
 		
-		int id = articleOps.createArticle(1, "abc", 0);
+		int id = articleOps.createArticle(1, "abcdef", 0);
+		System.out.println(id);
 	}
 	
 }
