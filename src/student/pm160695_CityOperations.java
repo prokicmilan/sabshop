@@ -2,7 +2,6 @@ package student;
 
 import java.sql.Connection;
 import java.sql.DriverManager;
-import java.sql.PreparedStatement;
 import java.sql.SQLException;
 import java.util.LinkedList;
 import java.util.List;
@@ -19,9 +18,7 @@ public class pm160695_CityOperations extends OperationImplementation implements 
 			List<ParameterPair> parameters = new LinkedList<>();
 			parameters.add(new ParameterPair("String", name));
 			
-			PreparedStatement insertStmt = this.getStatementHandler().prepareUpdateStatement(connection, query, parameters);
-			
-			return this.getStatementHandler().executeUpdateStatementAndGetId(insertStmt);
+			return this.getStatementHandler().executeUpdateStatementAndGetId(connection, query, parameters);
 		} catch (SQLException e) {
 			e.printStackTrace();
 			return -1;
@@ -50,9 +47,7 @@ public class pm160695_CityOperations extends OperationImplementation implements 
 			parameters.add(new ParameterPair("int", Integer.toString(cityId2)));
 			parameters.add(new ParameterPair("int", Integer.toString(distance)));
 			
-			PreparedStatement insertStmt = this.getStatementHandler().prepareUpdateStatement(connection, query, parameters);
-			
-			return this.getStatementHandler().executeUpdateStatementAndGetId(insertStmt);
+			return this.getStatementHandler().executeUpdateStatementAndGetId(connection, query, parameters);
 		} catch (SQLException e) {
 			e.printStackTrace();
 			return -1;

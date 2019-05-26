@@ -22,12 +22,6 @@ public class StatementHandler {
 		return instance;
 	}
 	
-	public PreparedStatement prepareUpdateStatement(Connection connection, String query, List<ParameterPair> parameters) throws SQLException {
-		PreparedStatement updateStatement = connection.prepareStatement(query, Statement.RETURN_GENERATED_KEYS);
-		this.setParameters(updateStatement, parameters);
-		return updateStatement;
-	}
-	
 	public <T> T executeSelectStatement(Connection connection, String query, List<ParameterPair> parameters, Class<T> typeClass) throws SQLException {
 		List<T> resultList = this.executeSelectListStatement(connection, query, parameters, typeClass);
 		if (resultList.isEmpty() || resultList.size() > 1) {
@@ -47,63 +41,18 @@ public class StatementHandler {
 		return resultList;
 	}
 	
-	public Integer executeIntegerSelectStatement(PreparedStatement selectStatement) throws SQLException {
-		List<Integer> resultList = this.executeIntegerListSelectStatement(selectStatement);
-		
+	public int executeUpdateStatementAndGetId(Connection connection, String query, List<ParameterPair> parameters) throws SQLException {
+		List<Integer> resultList = this.executeUpdateStatementAndGetIdList(connection, query, parameters);
 		if (resultList.isEmpty() || resultList.size() > 1) {
 			return -1;
 		}
 		else {
-			return resultList.get(0);
+			return resultList.get(0).intValue();
 		}
 	}
 	
-	public List<Integer> executeIntegerListSelectStatement(PreparedStatement selectStatement) throws SQLException {
-		List<Integer> resultList = new LinkedList<>();
-		
-		this.populateResultList(selectStatement, resultList, Integer.class);
-		return resultList;
-	}
-	
-	public String executeStringSelectStatement(PreparedStatement selectStatement) throws SQLException {
-		List<String> resultList = new LinkedList<>();
-		
-		this.populateResultList(selectStatement, resultList, String.class);
-		if (resultList.isEmpty() || resultList.size() > 1) {
-			return null;
-		}
-		else {
-			return resultList.get(0);
-		}
-	}
-	
-	public BigDecimal executeBigDecimalSelectStatement(PreparedStatement selectStatement) throws SQLException {
-		List<BigDecimal> resultList = new LinkedList<>();
-		
-		this.populateResultList(selectStatement, resultList, BigDecimal.class);
-		if (resultList.isEmpty() || resultList.size() > 1) {
-			return null;
-		}
-		else {
-			return resultList.get(0);
-		}
-	}
-	
-	public int executeUpdateStatementAndGetId(PreparedStatement updateStatement) throws SQLException {
-		int affectedRows = updateStatement.executeUpdate();
-		
-		if (affectedRows == 1) {
-			try (ResultSet rs = updateStatement.getGeneratedKeys()) {
-			
-				if (rs.next()) {
-					return rs.getInt(1);
-				}
-			}
-		}
-		return -1;
-	}
-	
-	public List<Integer> executeUpdateStatementAndGetIdList(PreparedStatement updateStatement) throws SQLException {
+	public List<Integer> executeUpdateStatementAndGetIdList(Connection connection, String query, List<ParameterPair> parameters) throws SQLException {
+		PreparedStatement updateStatement = this.prepareUpdateStatement(connection, query, parameters);
 		List<Integer> generatedKeysList = new LinkedList<>();
 		
 		updateStatement.executeUpdate();
@@ -120,6 +69,12 @@ public class StatementHandler {
 		this.setParameters(selectStatment, parameters);
 		
 		return selectStatment;
+	}
+	
+	private PreparedStatement prepareUpdateStatement(Connection connection, String query, List<ParameterPair> parameters) throws SQLException {
+		PreparedStatement updateStatement = connection.prepareStatement(query, Statement.RETURN_GENERATED_KEYS);
+		this.setParameters(updateStatement, parameters);
+		return updateStatement;
 	}
 	
 	private void setParameters(PreparedStatement statement, List<ParameterPair> parameters) throws SQLException {
@@ -184,7 +139,6 @@ public class StatementHandler {
 	}
 	
 	private StatementHandler() {
-		
 	}
 	
 }

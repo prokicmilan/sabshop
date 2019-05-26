@@ -3,7 +3,6 @@ package student;
 import java.math.BigDecimal;
 import java.sql.Connection;
 import java.sql.DriverManager;
-import java.sql.PreparedStatement;
 import java.sql.SQLException;
 import java.util.Calendar;
 import java.util.LinkedList;
@@ -22,16 +21,13 @@ public class pm160695_OrderOperations extends OperationImplementation implements
 				// postavljamo autocommit na false jer imamo update jedne tabele i upis u drugu
 				connection.setAutoCommit(false);
 	
-				
 				String updateQuery = "update Article set itemsAvailable = itemsAvailable - ? where id = ?";
 				
 				List<ParameterPair> parameters = new LinkedList<>();
 				parameters.add(new ParameterPair("int", Integer.toString(count)));
 				parameters.add(new ParameterPair("int", Integer.toString(articleId)));
 				
-				PreparedStatement updateStmt = this.getStatementHandler().prepareUpdateStatement(connection, updateQuery, parameters);
-				
-				this.getStatementHandler().executeUpdateStatementAndGetId(updateStmt);
+				this.getStatementHandler().executeUpdateStatementAndGetId(connection, updateQuery, parameters);
 				
 				parameters.clear();
 				// proveravamo da li proizvod vec postoji u porudzbini
@@ -48,9 +44,7 @@ public class pm160695_OrderOperations extends OperationImplementation implements
 					parameters.add(new ParameterPair("int", Integer.toString(count)));
 					parameters.add(new ParameterPair("int", Integer.toString(articleInOrderId)));
 					
-					PreparedStatement updateAiOStmt = this.getStatementHandler().prepareUpdateStatement(connection, updateAiOQuery, parameters);
-					
-					retVal = this.getStatementHandler().executeUpdateStatementAndGetId(updateAiOStmt);
+					retVal = this.getStatementHandler().executeUpdateStatementAndGetId(connection, updateAiOQuery, parameters);
 				}
 				else {
 					// proizvod ne postoji u narudzbini, dodajemo novi 
@@ -60,9 +54,7 @@ public class pm160695_OrderOperations extends OperationImplementation implements
 					parameters.add(new ParameterPair("int", Integer.toString(articleId)));
 					parameters.add(new ParameterPair("int", Integer.toString(count)));
 					
-					PreparedStatement insertAiOStmt = this.getStatementHandler().prepareUpdateStatement(connection, insertAiOQuery, parameters);
-					
-					retVal = this.getStatementHandler().executeUpdateStatementAndGetId(insertAiOStmt);
+					retVal = this.getStatementHandler().executeUpdateStatementAndGetId(connection, insertAiOQuery, parameters);
 				}
 				
 				// commit-ujemo transakciju
@@ -106,9 +98,7 @@ public class pm160695_OrderOperations extends OperationImplementation implements
 				parameters.add(new ParameterPair("int", Integer.toString(articlesInOrder)));
 				parameters.add(new ParameterPair("int", Integer.toString(articleId)));
 				
-				PreparedStatement updateStmt = this.getStatementHandler().prepareUpdateStatement(connection, updateQuery, parameters);
-
-				this.getStatementHandler().executeUpdateStatementAndGetId(updateStmt);
+				this.getStatementHandler().executeUpdateStatementAndGetId(connection, updateQuery, parameters);
 				
 				parameters.clear();
 				String deleteQuery = "delete from ArticleInOrder where orderId = ? and articleId = ";
@@ -116,9 +106,7 @@ public class pm160695_OrderOperations extends OperationImplementation implements
 				parameters.add(new ParameterPair("int", Integer.toString(orderId)));
 				parameters.add(new ParameterPair("int", Integer.toString(articleId)));
 				
-				PreparedStatement deleteStmt = this.getStatementHandler().prepareUpdateStatement(connection, deleteQuery, parameters);
-				
-				this.getStatementHandler().executeUpdateStatementAndGetId(updateStmt);
+				this.getStatementHandler().executeUpdateStatementAndGetId(connection, deleteQuery, parameters);
 				
 				connection.commit();
 				return 1;

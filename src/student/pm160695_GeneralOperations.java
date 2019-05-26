@@ -45,8 +45,7 @@ public class pm160695_GeneralOperations extends OperationImplementation implemen
 					"delete from City"
 			}));
 			for (String query : queries) {
-				PreparedStatement deleteStmt = this.getStatementHandler().prepareUpdateStatement(connection, query, null);
-				this.getStatementHandler().executeUpdateStatementAndGetIdList(deleteStmt);
+				this.getStatementHandler().executeUpdateStatementAndGetIdList(connection, query, null);
 			}
 		} catch (SQLException e) {
 			e.printStackTrace();

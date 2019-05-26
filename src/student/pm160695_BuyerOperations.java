@@ -3,7 +3,6 @@ package student;
 import java.math.BigDecimal;
 import java.sql.Connection;
 import java.sql.DriverManager;
-import java.sql.PreparedStatement;
 import java.sql.SQLException;
 import java.util.LinkedList;
 import java.util.List;
@@ -21,9 +20,7 @@ public class pm160695_BuyerOperations extends OperationImplementation implements
 			parameters.add(new ParameterPair("int", Integer.toString(cityId)));
 			parameters.add(new ParameterPair("String", name));
 			
-			PreparedStatement insertStmt = this.getStatementHandler().prepareUpdateStatement(connection, query, parameters);
-			
-			return this.getStatementHandler().executeUpdateStatementAndGetId(insertStmt);
+			return this.getStatementHandler().executeUpdateStatementAndGetId(connection, query, parameters);
 		} catch (SQLException e) {
 			e.printStackTrace();
 			return -1;
@@ -32,6 +29,7 @@ public class pm160695_BuyerOperations extends OperationImplementation implements
 
 	@Override
 	public int setCity(int buyerId, int cityId) {
+		int retVal = -1;
 		try (Connection connection = DriverManager.getConnection(this.getConnectionString())) {
 			String query = "update Buyer set cityId = ? where id = ?";
 			
@@ -39,14 +37,13 @@ public class pm160695_BuyerOperations extends OperationImplementation implements
 			parameters.add(new ParameterPair("int", Integer.toString(cityId)));
 			parameters.add(new ParameterPair("int", Integer.toString(buyerId)));
 			
-			PreparedStatement updateStmt = this.getStatementHandler().prepareUpdateStatement(connection, query, parameters);
+			retVal = this.getStatementHandler().executeUpdateStatementAndGetId(connection, query, parameters);
 			
-			int status = this.getStatementHandler().executeUpdateStatementAndGetId(updateStmt);
-			
-			return status != -1 ? 1 : -1;
+			return retVal != -1 ? 1 : -1;
 		} catch (SQLException e) {
 			e.printStackTrace();
-			return -1;
+			retVal = -1;
+			return retVal;
 		}
 	}
 
@@ -76,9 +73,7 @@ public class pm160695_BuyerOperations extends OperationImplementation implements
 			parameters.add(new ParameterPair("BigDecimal", credit.toString()));
 			parameters.add(new ParameterPair("int", Integer.toString(buyerId)));
 			
-			PreparedStatement updateStmt = this.getStatementHandler().prepareUpdateStatement(connection, updateQuery, parameters);
-			
-			this.getStatementHandler().executeUpdateStatementAndGetId(updateStmt);
+			this.getStatementHandler().executeUpdateStatementAndGetId(connection, updateQuery, parameters);
 			
 			parameters.clear();
 			String selectQuery = "select balance from Buyer where id = ?";
@@ -101,9 +96,7 @@ public class pm160695_BuyerOperations extends OperationImplementation implements
 			List<ParameterPair> parameters = new LinkedList<>();
 			parameters.add(new ParameterPair("int", Integer.toString(buyerId)));
 			
-			PreparedStatement insertStmt = this.getStatementHandler().prepareUpdateStatement(connection, query, parameters);
-			
-			return this.getStatementHandler().executeUpdateStatementAndGetId(insertStmt);
+			return this.getStatementHandler().executeUpdateStatementAndGetId(connection, query, parameters);
 		} catch (SQLException e) {
 			e.printStackTrace();
 			return -1;

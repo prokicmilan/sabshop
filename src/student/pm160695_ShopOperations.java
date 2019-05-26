@@ -2,7 +2,6 @@ package student;
 
 import java.sql.Connection;
 import java.sql.DriverManager;
-import java.sql.PreparedStatement;
 import java.sql.SQLException;
 import java.util.LinkedList;
 import java.util.List;
@@ -26,9 +25,7 @@ public class pm160695_ShopOperations extends OperationImplementation implements 
 			parameters.add(new ParameterPair("int", Integer.toString(cityId)));
 			parameters.add(new ParameterPair("String", name));
 			
-			PreparedStatement insertStmt = this.getStatementHandler().prepareUpdateStatement(connection, query, parameters);
-			
-			return this.getStatementHandler().executeUpdateStatementAndGetId(insertStmt);
+			return this.getStatementHandler().executeUpdateStatementAndGetId(connection, query, parameters);
 		} catch (SQLException e) {
 			e.printStackTrace();
 			return -1;
@@ -37,6 +34,7 @@ public class pm160695_ShopOperations extends OperationImplementation implements 
 
 	@Override
 	public int setCity(int shopId, String cityName) {
+		int retVal;
 		try (Connection connection = DriverManager.getConnection(this.getConnectionString())) {
 			pm160695_CityOperations cityOperations = new pm160695_CityOperations();
 			int cityId = cityOperations.getCityIdByName(cityName);
@@ -51,13 +49,13 @@ public class pm160695_ShopOperations extends OperationImplementation implements 
 			parameters.add(new ParameterPair("int", Integer.toString(cityId)));
 			parameters.add(new ParameterPair("int", Integer.toString(shopId)));
 			
-			PreparedStatement updateStmt = this.getStatementHandler().prepareUpdateStatement(connection, query, parameters);
-			int status = this.getStatementHandler().executeUpdateStatementAndGetId(updateStmt);
+			retVal = this.getStatementHandler().executeUpdateStatementAndGetId(connection, query, parameters);
 			
-			return status != -1 ? 1 : -1;
+			return retVal != -1 ? 1 : -1;
 		} catch (SQLException e) {
+			retVal = -1;
 			e.printStackTrace();
-			return -1;
+			return retVal;
 		}
 	}
 
@@ -80,6 +78,7 @@ public class pm160695_ShopOperations extends OperationImplementation implements 
 
 	@Override
 	public int setDiscount(int shopId, int discountPercentage) {
+		int retVal;
 		try (Connection connection = DriverManager.getConnection(this.getConnectionString())) {
 			String query = "update Shop set discount = ? where id = ?";
 			
@@ -87,14 +86,13 @@ public class pm160695_ShopOperations extends OperationImplementation implements 
 			parameters.add(new ParameterPair("int", Integer.toString(discountPercentage)));
 			parameters.add(new ParameterPair("int", Integer.toString(shopId)));
 			
-			PreparedStatement updateStmt = this.getStatementHandler().prepareUpdateStatement(connection, query, parameters);
+			retVal = this.getStatementHandler().executeUpdateStatementAndGetId(connection, query, parameters);
 			
-			int status = this.getStatementHandler().executeUpdateStatementAndGetId(updateStmt);
-			
-			return status != -1 ? 1 : -1;
+			return retVal != -1 ? 1 : -1;
 		} catch (SQLException e) {
+			retVal = -1;
 			e.printStackTrace();
-			return -1;
+			return retVal;
 		}
 	}
 
