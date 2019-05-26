@@ -69,9 +69,9 @@ public class pm160695_ShopOperations extends OperationImplementation implements 
 			List<ParameterPair> parameters = new LinkedList<>();
 			parameters.add(new ParameterPair("int", Integer.toString(shopId)));
 			
-			PreparedStatement selectStmt = this.getStatementHandler().prepareSelectStatement(connection, query, parameters);
+			Integer retVal = this.getStatementHandler().executeSelectStatement(connection, query, parameters, Integer.class);
 			
-			return this.getStatementHandler().executeIntegerSelectStatement(selectStmt);
+			return retVal != null ? retVal.intValue() : -1;
 		} catch (SQLException e) {
 			e.printStackTrace();
 			return -1;
@@ -113,9 +113,9 @@ public class pm160695_ShopOperations extends OperationImplementation implements 
 			parameters.add(new ParameterPair("int", Integer.toString(shopId)));
 			parameters.add(new ParameterPair("int", Integer.toString(articleId)));
 			
-			PreparedStatement selectStmt = this.getStatementHandler().prepareSelectStatement(connection, query, parameters);
+			Integer retVal = this.getStatementHandler().executeSelectStatement(connection, query, parameters, Integer.class);
 			
-			return this.getStatementHandler().executeIntegerSelectStatement(selectStmt);
+			return retVal != null ? retVal.intValue() : -1;
 		} catch (SQLException e) {
 			e.printStackTrace();
 			return -1;
@@ -130,9 +130,7 @@ public class pm160695_ShopOperations extends OperationImplementation implements 
 			List<ParameterPair> parameters = new LinkedList<>();
 			parameters.add(new ParameterPair("int", Integer.toString(shopId)));
 			
-			PreparedStatement selectStmt = this.getStatementHandler().prepareSelectStatement(connection, query, parameters);
-			
-			return this.getStatementHandler().executeIntegerListSelectStatement(selectStmt);
+			return this.getStatementHandler().executeSelectListStatement(connection, query, parameters, Integer.class);
 		} catch (SQLException e) {
 			e.printStackTrace();
 			return null;
@@ -147,16 +145,9 @@ public class pm160695_ShopOperations extends OperationImplementation implements 
 			List<ParameterPair> parameters = new LinkedList<>();
 			parameters.add(new ParameterPair("int", Integer.toString(shopId)));
 			
-			PreparedStatement selectStmt = this.getStatementHandler().prepareSelectStatement(connection, query, parameters);
+			Integer retVal = this.getStatementHandler().executeSelectStatement(connection, query, parameters, Integer.class);
 			
-			List<Integer> resultList = this.getStatementHandler().executeIntegerListSelectStatement(selectStmt);
-			if (resultList.isEmpty() || resultList.size() > 1) {
-				// nije definisano postavkom, pa uzimamo da vraca -1 kao i kod svih ostalih gresaka
-				return -1;
-			}
-			else {
-				return resultList.get(0);
-			}
+			return retVal != null ? retVal.intValue() : -1;
 		} catch (SQLException e) {
 			e.printStackTrace();
 			return -1;

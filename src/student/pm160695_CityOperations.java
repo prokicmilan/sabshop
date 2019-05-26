@@ -32,9 +32,8 @@ public class pm160695_CityOperations extends OperationImplementation implements 
 	public List<Integer> getCities() {
 		try (Connection connection = DriverManager.getConnection(this.getConnectionString())) {
 			String query = "select id from City";
-			PreparedStatement selectStmt = this.getStatementHandler().prepareSelectStatement(connection, query, null);
 			
-			return this.getStatementHandler().executeIntegerListSelectStatement(selectStmt);
+			return this.getStatementHandler().executeSelectListStatement(connection, query, null, Integer.class);
 		} catch (SQLException e) {
 			e.printStackTrace();
 			return null;
@@ -68,15 +67,11 @@ public class pm160695_CityOperations extends OperationImplementation implements 
 			List<ParameterPair> parameters = new LinkedList<>();
 			parameters.add(new ParameterPair("int", Integer.toString(cityId)));
 			
-			PreparedStatement selectStmt = this.getStatementHandler().prepareSelectStatement(connection, query, parameters);
-			
-			List<Integer> returnList = this.getStatementHandler().executeIntegerListSelectStatement(selectStmt);
+			List<Integer> returnList = this.getStatementHandler().executeSelectListStatement(connection, query, parameters, Integer.class);
 			
 			query = "select cityId2 from Line where cityId1 = ?";
 			
-			selectStmt = this.getStatementHandler().prepareSelectStatement(connection, query, parameters);
-			
-			returnList.addAll(this.getStatementHandler().executeIntegerListSelectStatement(selectStmt));
+			returnList.addAll(this.getStatementHandler().executeSelectListStatement(connection, query, parameters, Integer.class));
 			
 			return returnList;
 		} catch (SQLException e) {
@@ -93,9 +88,7 @@ public class pm160695_CityOperations extends OperationImplementation implements 
 			List<ParameterPair> parameters = new LinkedList<>();
 			parameters.add(new ParameterPair("int", Integer.toString(cityId)));
 			
-			PreparedStatement selectStmt = this.getStatementHandler().prepareSelectStatement(connection, query, parameters);
-			
-			return this.getStatementHandler().executeIntegerListSelectStatement(selectStmt);
+			return this.getStatementHandler().executeSelectListStatement(connection, query, parameters, Integer.class);
 		} catch (SQLException e) {
 			e.printStackTrace();
 			return null;
@@ -108,10 +101,9 @@ public class pm160695_CityOperations extends OperationImplementation implements 
 			
 			List<ParameterPair> parameters = new LinkedList<>();
 			parameters.add(new ParameterPair("String", cityName));
-			
-			PreparedStatement selectStmt = this.getStatementHandler().prepareUpdateStatement(connection, query, parameters);
 
-			return this.getStatementHandler().executeIntegerSelectStatement(selectStmt);
+			Integer retVal = this.getStatementHandler().executeSelectStatement(connection, query, parameters, Integer.class);
+			return retVal != null ? retVal.intValue() : -1;
 		} catch (SQLException e) {
 			e.printStackTrace();
 			return -1;

@@ -58,9 +58,9 @@ public class pm160695_BuyerOperations extends OperationImplementation implements
 			List<ParameterPair> parameters = new LinkedList<>();
 			parameters.add(new ParameterPair("int", Integer.toString(buyerId)));
 			
-			PreparedStatement selectStmt = this.getStatementHandler().prepareSelectStatement(connection, query, parameters);
+			Integer retVal = this.getStatementHandler().executeSelectStatement(connection, query, parameters, Integer.class);
 			
-			return this.getStatementHandler().executeIntegerSelectStatement(selectStmt);
+			return retVal != null ? retVal.intValue() : -1;
 		} catch (SQLException e) {
 			e.printStackTrace();
 			return -1;
@@ -70,24 +70,23 @@ public class pm160695_BuyerOperations extends OperationImplementation implements
 	@Override
 	public BigDecimal increaseCredit(int buyerId, BigDecimal credit) {
 		try (Connection connection = DriverManager.getConnection(this.getConnectionString())) {
-			String query = "update Buyer set balance = balance + ? where id = ?";
+			String updateQuery = "update Buyer set balance = balance + ? where id = ?";
 			
 			List<ParameterPair> parameters = new LinkedList<>();
 			parameters.add(new ParameterPair("BigDecimal", credit.toString()));
 			parameters.add(new ParameterPair("int", Integer.toString(buyerId)));
 			
-			PreparedStatement updateStmt = this.getStatementHandler().prepareUpdateStatement(connection, query, parameters);
+			PreparedStatement updateStmt = this.getStatementHandler().prepareUpdateStatement(connection, updateQuery, parameters);
 			
 			this.getStatementHandler().executeUpdateStatementAndGetId(updateStmt);
 			
 			parameters.clear();
-			query = "select balance from Buyer where id = ?";
+			String selectQuery = "select balance from Buyer where id = ?";
 			
 			parameters.add(new ParameterPair("int", Integer.toString(buyerId)));
 			
-			PreparedStatement selectStmt = this.getStatementHandler().prepareSelectStatement(connection, query, parameters);
+			return this.getStatementHandler().executeSelectStatement(connection, selectQuery, parameters, BigDecimal.class);
 			
-			return this.getStatementHandler().executeBigDecimalSelectStatement(selectStmt);
 		} catch (SQLException e) {
 			e.printStackTrace();
 			return null;
@@ -119,9 +118,7 @@ public class pm160695_BuyerOperations extends OperationImplementation implements
 			List<ParameterPair> parameters = new LinkedList<>();
 			parameters.add(new ParameterPair("int", Integer.toString(buyerId)));
 			
-			PreparedStatement selectStmt = this.getStatementHandler().prepareSelectStatement(connection, query, parameters);
-			
-			return this.getStatementHandler().executeIntegerListSelectStatement(selectStmt);
+			return this.getStatementHandler().executeSelectListStatement(connection, query, parameters, Integer.class);
 		} catch (SQLException e) {
 			e.printStackTrace();
 			return null;
@@ -136,9 +133,7 @@ public class pm160695_BuyerOperations extends OperationImplementation implements
 			List<ParameterPair> parameters = new LinkedList<>();
 			parameters.add(new ParameterPair("int", Integer.toString(buyerId)));
 			
-			PreparedStatement selectStmt = this.getStatementHandler().prepareSelectStatement(connection, query, parameters);
-			
-			return this.getStatementHandler().executeBigDecimalSelectStatement(selectStmt);
+			return this.getStatementHandler().executeSelectStatement(connection, query, parameters, BigDecimal.class);
 		} catch (SQLException e) {
 			e.printStackTrace();
 			return null;

@@ -15,12 +15,13 @@ public class pm160695_OrderOperations extends OperationImplementation implements
 
 	@Override
 	public int addArticle(int orderId, int articleId, int count) {
+		int retVal = -1;
+		
 		try (Connection connection = DriverManager.getConnection(this.getConnectionString())) {
 			try {
 				// postavljamo autocommit na false jer imamo update jedne tabele i upis u drugu
 				connection.setAutoCommit(false);
 	
-				int retVal = -1;
 				
 				String updateQuery = "update Article set itemsAvailable = itemsAvailable - ? where id = ?";
 				
@@ -38,11 +39,9 @@ public class pm160695_OrderOperations extends OperationImplementation implements
 				parameters.add(new ParameterPair("int", Integer.toString(orderId)));
 				parameters.add(new ParameterPair("int", Integer.toString(articleId)));
 				
-				PreparedStatement selectStmt = this.getStatementHandler().prepareSelectStatement(connection, selectQuery, parameters);
-				
-				int articleInOrderId = this.getStatementHandler().executeIntegerSelectStatement(selectStmt);
+				Integer articleInOrderId = this.getStatementHandler().executeSelectStatement(connection, selectQuery, parameters, Integer.class);
 				parameters.clear();
-				if (articleInOrderId != -1) {
+				if (articleInOrderId != null) {
 					// proizvod vec postoji u narudzbini, samo radimo update kolicine
 					String updateAiOQuery = "update ArticleInOrder set amount = amount + ? where id = ?";
 					
@@ -73,13 +72,15 @@ public class pm160695_OrderOperations extends OperationImplementation implements
 			} catch (SQLException e) {
 				// doslo je do greske, radimo rollback transakcije i bacamo exception dalje
 				connection.rollback();
+				retVal = -1;
 				throw e;
 			} finally {
 				connection.setAutoCommit(true);
 			}
 		} catch (SQLException e) {
+			retVal = -1;
 			e.printStackTrace();
-			return -1;
+			return retVal;
 		}
 	}
 
@@ -97,9 +98,7 @@ public class pm160695_OrderOperations extends OperationImplementation implements
 				parameters.add(new ParameterPair("int", Integer.toString(orderId)));
 				parameters.add(new ParameterPair("int", Integer.toString(articleId)));
 
-				PreparedStatement selectStmt = this.getStatementHandler().prepareSelectStatement(connection, selectQuery, parameters);
-				
-				int articlesInOrder = this.getStatementHandler().executeIntegerSelectStatement(selectStmt);
+				Integer articlesInOrder = this.getStatementHandler().executeSelectStatement(connection, selectQuery, parameters, Integer.class);
 				
 				parameters.clear();
 				String updateQuery = "update Article set itemsAvailable = itemsAvailable + ? where id = ?";
@@ -144,9 +143,7 @@ public class pm160695_OrderOperations extends OperationImplementation implements
 			List<ParameterPair> parameters = new LinkedList<>();
 			parameters.add(new ParameterPair("int", Integer.toString(orderId)));
 			
-			PreparedStatement selectStmt = this.getStatementHandler().prepareSelectStatement(connection, query, parameters);
-			
-			return this.getStatementHandler().executeIntegerListSelectStatement(selectStmt);
+			return this.getStatementHandler().executeSelectListStatement(connection, query, parameters, Integer.class);
 		} catch (SQLException e) {
 			e.printStackTrace();
 			return null;
@@ -179,9 +176,7 @@ public class pm160695_OrderOperations extends OperationImplementation implements
 			List<ParameterPair> parameters = new LinkedList<>();
 			parameters.add(new ParameterPair("int", Integer.toString(orderId)));
 			
-			PreparedStatement selectStmt = this.getStatementHandler().prepareSelectStatement(connection, query, parameters);
-			
-			return this.getStatementHandler().executeStringSelectStatement(selectStmt);
+			return this.getStatementHandler().executeSelectStatement(connection, query, parameters, String.class);
 		} catch (SQLException e) {
 			e.printStackTrace();
 			return null;
@@ -208,9 +203,9 @@ public class pm160695_OrderOperations extends OperationImplementation implements
 			List<ParameterPair> parameters = new LinkedList<>();
 			parameters.add(new ParameterPair("int", Integer.toString(orderId)));
 			
-			PreparedStatement selectStmt = this.getStatementHandler().prepareSelectStatement(connection, query, parameters);
+			Integer retVal = this.getStatementHandler().executeSelectStatement(connection, query, parameters, Integer.class);
 			
-			return this.getStatementHandler().executeIntegerSelectStatement(selectStmt);
+			return retVal != null ? retVal.intValue() : -1;
 		} catch (SQLException e) {
 			e.printStackTrace();
 			return -1;

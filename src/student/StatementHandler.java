@@ -21,18 +21,30 @@ public class StatementHandler {
 		}
 		return instance;
 	}
-
-	public PreparedStatement prepareSelectStatement(Connection connection, String query, List<ParameterPair> parameters) throws SQLException {
-		PreparedStatement selectStatment = connection.prepareStatement(query);
-		this.setParameters(selectStatment, parameters);
-		
-		return selectStatment;
-	}
 	
 	public PreparedStatement prepareUpdateStatement(Connection connection, String query, List<ParameterPair> parameters) throws SQLException {
 		PreparedStatement updateStatement = connection.prepareStatement(query, Statement.RETURN_GENERATED_KEYS);
 		this.setParameters(updateStatement, parameters);
 		return updateStatement;
+	}
+	
+	public <T> T executeSelectStatement(Connection connection, String query, List<ParameterPair> parameters, Class<T> typeClass) throws SQLException {
+		List<T> resultList = this.executeSelectListStatement(connection, query, parameters, typeClass);
+		if (resultList.isEmpty() || resultList.size() > 1) {
+			return null;
+		}
+		else {
+			return resultList.get(0);
+		}
+	}
+	
+	public <T> List<T> executeSelectListStatement(Connection connection, String query, List<ParameterPair> parameters, Class<T> typeClass) throws SQLException {
+		PreparedStatement selectStatement = this.prepareSelectStatement(connection, query, parameters);
+		List<T> resultList = new LinkedList<>();
+		
+		this.populateResultList(selectStatement, resultList, typeClass);
+		
+		return resultList;
 	}
 	
 	public Integer executeIntegerSelectStatement(PreparedStatement selectStatement) throws SQLException {
@@ -101,6 +113,13 @@ public class StatementHandler {
 			}
 		}
 		return generatedKeysList;
+	}
+	
+	private PreparedStatement prepareSelectStatement(Connection connection, String query, List<ParameterPair> parameters) throws SQLException {
+		PreparedStatement selectStatment = connection.prepareStatement(query);
+		this.setParameters(selectStatment, parameters);
+		
+		return selectStatment;
 	}
 	
 	private void setParameters(PreparedStatement statement, List<ParameterPair> parameters) throws SQLException {
