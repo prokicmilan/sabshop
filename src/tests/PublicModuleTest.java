@@ -1,13 +1,6 @@
 package tests;
 
 import operations.*;
-import student.pm160695_ArticleOperations;
-import student.pm160695_BuyerOperations;
-import student.pm160695_CityOperations;
-import student.pm160695_GeneralOperations;
-import student.pm160695_OrderOperations;
-import student.pm160695_ShopOperations;
-import student.pm160695_TransactionOperations;
 
 import org.junit.After;
 import org.junit.Assert;
@@ -30,35 +23,28 @@ public class PublicModuleTest {
 
     @Before
     public void setUp() throws Exception {
-        //this.testHandler = TestHandler.getInstance();
-        //Assert.assertNotNull(this.testHandler);
+        this.testHandler = TestHandler.getInstance();
+        Assert.assertNotNull(this.testHandler);
 
-        //this.shopOperations = this.testHandler.getShopOperations();
-    	this.shopOperations = new pm160695_ShopOperations();
+        this.shopOperations = this.testHandler.getShopOperations();
         Assert.assertNotNull(this.shopOperations);
 
-        //this.cityOperations = this.testHandler.getCityOperations();
-        this.cityOperations = new pm160695_CityOperations();
+        this.cityOperations = this.testHandler.getCityOperations();
         Assert.assertNotNull(this.cityOperations);
 
-        //this.articleOperations = this.testHandler.getArticleOperations();
-        this.articleOperations = new pm160695_ArticleOperations();
+        this.articleOperations = this.testHandler.getArticleOperations();
         Assert.assertNotNull(this.articleOperations);
 
-        //this.buyerOperations = this.testHandler.getBuyerOperations();
-        this.buyerOperations = new pm160695_BuyerOperations();
+        this.buyerOperations = this.testHandler.getBuyerOperations();
         Assert.assertNotNull(this.buyerOperations);
 
-        //orderOperations = testHandler.getOrderOperations();
-        this.orderOperations = new pm160695_OrderOperations();
+        orderOperations = testHandler.getOrderOperations();
         Assert.assertNotNull(orderOperations);
 
-        //transactionOperations = testHandler.getTransactionOperations();
-        this.transactionOperations = new pm160695_TransactionOperations();
+        transactionOperations = testHandler.getTransactionOperations();
         Assert.assertNotNull(transactionOperations);
 
-        //generalOperations = testHandler.getGeneralOperations();
-        this.generalOperations = new pm160695_GeneralOperations();
+        generalOperations = testHandler.getGeneralOperations();
         Assert.assertNotNull(generalOperations);
 
         generalOperations.eraseAll();

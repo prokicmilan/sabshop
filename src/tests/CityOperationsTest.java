@@ -3,9 +3,6 @@ package tests;
 import operations.CityOperations;
 import operations.GeneralOperations;
 import operations.ShopOperations;
-import student.pm160695_CityOperations;
-import student.pm160695_GeneralOperations;
-import student.pm160695_ShopOperations;
 
 import org.junit.After;
 import org.junit.Assert;
@@ -24,20 +21,17 @@ public class CityOperationsTest {
 
     @Before
     public void setUp() throws Exception {
-//        this.testHandler = TestHandler.getInstance();
-//        Assert.assertNotNull(this.testHandler);
+        this.testHandler = TestHandler.getInstance();
+        Assert.assertNotNull(this.testHandler);
 
-        //this.cityOperations = this.testHandler.getCityOperations();
-    	this.cityOperations = new pm160695_CityOperations();
+        this.cityOperations = this.testHandler.getCityOperations();
         Assert.assertNotNull(this.cityOperations);
 
-        //generalOperations = testHandler.getGeneralOperations();
-        this.generalOperations = new pm160695_GeneralOperations();
+        generalOperations = testHandler.getGeneralOperations();
         Assert.assertNotNull(generalOperations);
 
 
-        //this.shopOperations = this.testHandler.getShopOperations();
-        this.shopOperations = new pm160695_ShopOperations();
+        this.shopOperations = this.testHandler.getShopOperations();
         Assert.assertNotNull(this.shopOperations);
 
         generalOperations.eraseAll();

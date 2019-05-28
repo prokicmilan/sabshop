@@ -3,9 +3,6 @@ package tests;
 import operations.BuyerOperations;
 import operations.CityOperations;
 import operations.GeneralOperations;
-import student.pm160695_BuyerOperations;
-import student.pm160695_CityOperations;
-import student.pm160695_GeneralOperations;
 
 import org.junit.After;
 import org.junit.Assert;
@@ -25,19 +22,16 @@ public class BuyerOperationsTest {
 
     @Before
     public void setUp() throws Exception {
-        //this.testHandler = TestHandler.getInstance();
-        //Assert.assertNotNull(this.testHandler);
+        this.testHandler = TestHandler.getInstance();
+        Assert.assertNotNull(this.testHandler);
 
-        //this.cityOperations = this.testHandler.getCityOperations();
-    	this.cityOperations = new pm160695_CityOperations();
+        this.cityOperations = this.testHandler.getCityOperations();
         Assert.assertNotNull(this.cityOperations);
 
-        //generalOperations = testHandler.getGeneralOperations();
-        this.generalOperations = new pm160695_GeneralOperations();
+        generalOperations = testHandler.getGeneralOperations();
         Assert.assertNotNull(generalOperations);
 
-        //buyerOperations = testHandler.getBuyerOperations();
-        this.buyerOperations = new pm160695_BuyerOperations();
+        buyerOperations = testHandler.getBuyerOperations();
         Assert.assertNotNull(buyerOperations);
 
         generalOperations.eraseAll();

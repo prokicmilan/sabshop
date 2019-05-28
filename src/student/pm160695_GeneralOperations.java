@@ -2,7 +2,6 @@ package student;
 
 import java.sql.Connection;
 import java.sql.DriverManager;
-import java.sql.PreparedStatement;
 import java.sql.SQLException;
 import java.util.Arrays;
 import java.util.Calendar;
@@ -13,22 +12,22 @@ import operations.GeneralOperations;
 
 public class pm160695_GeneralOperations extends OperationImplementation implements GeneralOperations {
 
+	private static Calendar currentTime;
+	
 	@Override
 	public void setInitialTime(Calendar time) {
-		// TODO Auto-generated method stub
-
+		currentTime = time;
 	}
 
 	@Override
 	public Calendar time(int days) {
-		// TODO Auto-generated method stub
-		return null;
+		currentTime.add(Calendar.DATE, days);
+		return currentTime;
 	}
 
 	@Override
 	public Calendar getCurrentTime() {
-		// TODO Auto-generated method stub
-		return null;
+		return currentTime;
 	}
 
 	@Override
@@ -36,8 +35,8 @@ public class pm160695_GeneralOperations extends OperationImplementation implemen
 		try (Connection connection = DriverManager.getConnection(this.getConnectionString())) {
 			List<String> queries = new LinkedList<>();
 			queries.addAll(Arrays.asList(new String[] {
-					"delete from Article",
 					"delete from ArticleInOrder",
+					"delete from Article",
 					"delete from [Order]",
 					"delete from Buyer",
 					"delete from Shop",

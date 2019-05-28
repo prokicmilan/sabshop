@@ -173,14 +173,32 @@ public class pm160695_OrderOperations extends OperationImplementation implements
 
 	@Override
 	public Calendar getSentTime(int orderId) {
-		// TODO Auto-generated method stub
-		return null;
+		try (Connection connection = DriverManager.getConnection(this.getConnectionString())) {
+			String query = "select sentTime from [Order] where id = ?";
+			
+			List<ParameterPair> parameters = new LinkedList<>();
+			parameters.add(new ParameterPair("int", Integer.toString(orderId)));
+
+			return this.getStatementHandler().executeSelectStatement(connection, query, parameters, Calendar.class);
+		} catch (SQLException e) {
+			e.printStackTrace();
+			return null;
+		}
 	}
 
 	@Override
 	public Calendar getRecievedTime(int orderId) {
-		// TODO Auto-generated method stub
-		return null;
+		try (Connection connection = DriverManager.getConnection(this.getConnectionString())) {
+			String query = "select recievedTime from [Order] where id = ?";
+			
+			List<ParameterPair> parameters = new LinkedList<>();
+			parameters.add(new ParameterPair("int", Integer.toString(orderId)));
+
+			return this.getStatementHandler().executeSelectStatement(connection, query, parameters, Calendar.class);
+		} catch (SQLException e) {
+			e.printStackTrace();
+			return null;
+		}
 	}
 
 	@Override

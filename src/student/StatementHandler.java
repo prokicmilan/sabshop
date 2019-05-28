@@ -1,12 +1,14 @@
 package student;
 
 import java.math.BigDecimal;
+import java.sql.CallableStatement;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.sql.Timestamp;
+import java.sql.Types;
 import java.util.Calendar;
 import java.util.LinkedList;
 import java.util.List;
@@ -20,6 +22,30 @@ public class StatementHandler {
 			instance = new StatementHandler();
 		}
 		return instance;
+	}
+	
+	@SuppressWarnings("unchecked")
+	public <T> T executeCallableStatement(Connection connection, String callQuery, List<ParameterPair> parameters, Class<T> typeClass) throws SQLException {
+		CallableStatement statement = connection.prepareCall(callQuery);
+		
+		String className = typeClass.getName().substring(typeClass.getName().lastIndexOf(".") + 1, typeClass.getName().length());
+		int type = -1;
+		switch (className) {
+			case "Integer":
+				type = Types.INTEGER;
+				break;
+			case "BigDecimal":
+				type = Types.DECIMAL;
+				break;
+			default:
+				System.err.println("Unsupported type class: " + className);
+				break;
+		}
+		statement.registerOutParameter(1, type);
+		this.setParameters(statement, parameters, 2);
+		statement.execute();
+		
+		return (T) statement.getObject(1); 
 	}
 	
 	public <T> T executeSelectStatement(Connection connection, String query, List<ParameterPair> parameters, Class<T> typeClass) throws SQLException {
@@ -77,10 +103,13 @@ public class StatementHandler {
 		return updateStatement;
 	}
 	
-	private void setParameters(PreparedStatement statement, List<ParameterPair> parameters) throws SQLException {
+	private void setParameters(PreparedStatement statement, List<ParameterPair> parameters, Integer... paramIndexStart) throws SQLException {
 		if (parameters == null || parameters.isEmpty()) return;
 		
 		int paramIndex = 1;
+		if (paramIndexStart != null && paramIndexStart.length == 1) {
+			paramIndex = paramIndexStart[0];
+		}
 		
 		for (ParameterPair argumentPair : parameters) {
 			String type = argumentPair.getType();
@@ -104,6 +133,10 @@ public class StatementHandler {
 					BigDecimal bigDecimalVal = new BigDecimal(argumentPair.getValue());
 					statement.setBigDecimal(paramIndex++, bigDecimalVal);
 					break;
+				case "Calendar":
+					long timeInMillis = Long.parseLong(argumentPair.getValue());
+					Timestamp ts = new Timestamp(timeInMillis);
+					statement.setTimestamp(paramIndex++, ts);
 					
 				default:
 					System.err.println("Unknown type: " + type);
@@ -126,9 +159,17 @@ public class StatementHandler {
 						break;
 					case "Calendar":
 						Timestamp ts = rs.getTimestamp(1);
-						Calendar calendar = Calendar.getInstance();
-						calendar.setTimeInMillis(ts.getTime());
-						resultList.add((T) calendar);
+						if (ts != null) {
+							Calendar calendar = Calendar.getInstance();
+							calendar.setTimeInMillis(ts.getTime());
+							resultList.add((T) calendar);
+						}
+						else {
+							resultList.add(null);
+						}
+						break;
+					case "String":
+						resultList.add((T) rs.getString(1));
 						break;
 					default:
 						System.err.println("Unsupported type class: " + className);

@@ -98,8 +98,27 @@ public class pm160695_ShopOperations extends OperationImplementation implements 
 
 	@Override
 	public int increaseArticleCount(int articleId, int increment) {
-		// TODO Auto-generated method stub
-		return 0;
+		try (Connection connection = DriverManager.getConnection(this.getConnectionString())) {
+			String updateQuery = "update Article set itemsAvailable = itemsAvailable + ? where id = ?";
+			
+			List<ParameterPair> parameters = new LinkedList<>();
+			parameters.add(new ParameterPair("int", Integer.toString(increment)));
+			parameters.add(new ParameterPair("int", Integer.toString(articleId)));
+			
+			this.getStatementHandler().executeUpdateStatementAndGetId(connection, updateQuery, parameters);
+			
+			parameters.clear();
+			String selectQuery = "select itemsAvailable from Article where id = ?";
+			
+			parameters.add(new ParameterPair("int", Integer.toString(articleId)));
+			
+			Integer itemsAfterIncrease = this.getStatementHandler().executeSelectStatement(connection, selectQuery, parameters, Integer.class);
+			
+			return itemsAfterIncrease != null ? itemsAfterIncrease.intValue() : -1;
+		} catch (SQLException e) {
+			e.printStackTrace();
+			return -1;
+		}
 	}
 
 	@Override
