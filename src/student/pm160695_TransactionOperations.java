@@ -4,10 +4,13 @@ import java.math.BigDecimal;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.SQLException;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.Calendar;
 import java.util.LinkedList;
 import java.util.List;
 
+import operations.GeneralOperations;
 import operations.TransactionOperations;
 
 public class pm160695_TransactionOperations extends OperationImplementation implements TransactionOperations {
@@ -15,7 +18,7 @@ public class pm160695_TransactionOperations extends OperationImplementation impl
 	@Override
 	public BigDecimal getBuyerTransactionsAmmount(int buyerId) {
 		try (Connection connection = DriverManager.getConnection(this.getConnectionString())) {
-			String selectQuery = "select transactionAmount from Transaction where buyerId = ?";
+			String selectQuery = "select transactionAmount from [Transaction] where buyerId = ?";
 			
 			List<ParameterPair> parameters = new LinkedList<>();
 			parameters.add(new ParameterPair("int", Integer.toString(buyerId)));
@@ -32,7 +35,7 @@ public class pm160695_TransactionOperations extends OperationImplementation impl
 	@Override
 	public BigDecimal getShopTransactionsAmmount(int shopId) {
 		try (Connection connection = DriverManager.getConnection(this.getConnectionString())) {
-			String selectQuery = "select transactionAmount from Transaction where shopId = ?";
+			String selectQuery = "select transactionAmount from [Transaction] where shopId = ?";
 			
 			List<ParameterPair> parameters = new LinkedList<>();
 			parameters.add(new ParameterPair("int", Integer.toString(shopId)));
@@ -49,7 +52,7 @@ public class pm160695_TransactionOperations extends OperationImplementation impl
 	@Override
 	public List<Integer> getTransationsForBuyer(int buyerId) {
 		try (Connection connection = DriverManager.getConnection(this.getConnectionString())) {
-			String selectQuery = "select id from Transaction where buyerId = ?";
+			String selectQuery = "select id from [Transaction] where buyerId = ?";
 			
 			List<ParameterPair> parameters = new LinkedList<>();
 			parameters.add(new ParameterPair("int", Integer.toString(buyerId)));
@@ -64,7 +67,7 @@ public class pm160695_TransactionOperations extends OperationImplementation impl
 	@Override
 	public int getTransactionForBuyersOrder(int orderId) {
 		try (Connection connection = DriverManager.getConnection(this.getConnectionString())) {
-			String selectQuery = "select id from Transaction where orderId = ? and buyerId is not null";
+			String selectQuery = "select id from [Transaction] where orderId = ? and buyerId is not null";
 			
 			List<ParameterPair> parameters = new LinkedList<>();
 			parameters.add(new ParameterPair("int", Integer.toString(orderId)));
@@ -81,7 +84,7 @@ public class pm160695_TransactionOperations extends OperationImplementation impl
 	@Override
 	public int getTransactionForShopAndOrder(int orderId, int shopId) {
 		try (Connection connection = DriverManager.getConnection(this.getConnectionString())) {
-			String selectQuery = "select id from Transaction where orderId = ? and shopId = ?";
+			String selectQuery = "select id from [Transaction] where orderId = ? and shopId = ?";
 			
 			List<ParameterPair> parameters = new LinkedList<>();
 			parameters.add(new ParameterPair("int", Integer.toString(orderId)));
@@ -99,12 +102,13 @@ public class pm160695_TransactionOperations extends OperationImplementation impl
 	@Override
 	public List<Integer> getTransationsForShop(int shopId) {
 		try (Connection connection = DriverManager.getConnection(this.getConnectionString())) {
-			String selectQuery = "select id from Transaction where shopId = ?";
+			String selectQuery = "select id from [Transaction] where shopId = ?";
 			
 			List<ParameterPair> parameters = new LinkedList<>();
 			parameters.add(new ParameterPair("int", Integer.toString(shopId)));
 			
-			return this.getStatementHandler().executeSelectListStatement(connection, selectQuery, parameters, Integer.class);
+			List<Integer> transactions = this.getStatementHandler().executeSelectListStatement(connection, selectQuery, parameters, Integer.class);
+			return transactions.size() != 0 ? transactions : null;
 		} catch (SQLException e) {
 			e.printStackTrace();
 			return null;
@@ -114,7 +118,7 @@ public class pm160695_TransactionOperations extends OperationImplementation impl
 	@Override
 	public Calendar getTimeOfExecution(int transactionId) {
 		try (Connection connection = DriverManager.getConnection(this.getConnectionString())) {
-			String selectQuery = "select timeOfExecution from Transaction where id = ?";
+			String selectQuery = "select timeOfExecution from [Transaction] where id = ?";
 			
 			List<ParameterPair> parameters = new LinkedList<>();
 			parameters.add(new ParameterPair("int", Integer.toString(transactionId)));
@@ -129,7 +133,7 @@ public class pm160695_TransactionOperations extends OperationImplementation impl
 	@Override
 	public BigDecimal getAmmountThatBuyerPayedForOrder(int orderId) {
 		try (Connection connection = DriverManager.getConnection(this.getConnectionString())) {
-			String selectQuery = "select transactionAmount from Transaction where orderId = ? and buyerId is not null";
+			String selectQuery = "select transactionAmount from [Transaction] where orderId = ? and buyerId is not null";
 			
 			List<ParameterPair> parameters = new LinkedList<>();
 			parameters.add(new ParameterPair("int", Integer.toString(orderId)));
@@ -144,7 +148,7 @@ public class pm160695_TransactionOperations extends OperationImplementation impl
 	@Override
 	public BigDecimal getAmmountThatShopRecievedForOrder(int shopId, int orderId) {
 		try (Connection connection = DriverManager.getConnection(this.getConnectionString())) {
-			String selectQuery = "select transactionAmount from Transaction where orderId = ? and shopId is not null";
+			String selectQuery = "select transactionAmount from [Transaction] where orderId = ? and shopId is not null";
 			
 			List<ParameterPair> parameters = new LinkedList<>();
 			parameters.add(new ParameterPair("int", Integer.toString(orderId)));
@@ -159,7 +163,7 @@ public class pm160695_TransactionOperations extends OperationImplementation impl
 	@Override
 	public BigDecimal getTransactionAmount(int transactionId) {
 		try (Connection connection = DriverManager.getConnection(this.getConnectionString())) {
-			String selectQuery = "select transactionAmount from Transaction id = ?";
+			String selectQuery = "select transactionAmount from [Transaction] id = ?";
 			
 			List<ParameterPair> parameters = new LinkedList<>();
 			parameters.add(new ParameterPair("int", Integer.toString(transactionId)));
@@ -175,7 +179,29 @@ public class pm160695_TransactionOperations extends OperationImplementation impl
 	public BigDecimal getSystemProfit() {
 		try (Connection connection = DriverManager.getConnection(this.getConnectionString())) {
 			String callQuery = "{? = CALL CalculateSystemProfit }";
-			return this.getStatementHandler().executeCallableStatement(connection, callQuery, null, BigDecimal.class);
+			BigDecimal profit = this.getStatementHandler().executeCallableStatement(connection, callQuery, null, BigDecimal.class);
+			return profit.setScale(3);
+		} catch (SQLException e) {
+			e.printStackTrace();
+			return null;
+		}
+	}
+	
+	public BigDecimal getTransactionAmountLastThirtyDaysForBuyer(int buyerId) {
+		try (Connection connection = DriverManager.getConnection(this.getConnectionString())) {
+			String selectQuery = "select transactionAmount from [Transaction] where buyerId = ? and timeOfExecution >= ?";
+
+			GeneralOperations generalOperations = new pm160695_GeneralOperations();
+			Calendar currentTime = generalOperations.getCurrentTime();
+			LocalDate thirtyDaysBeforeCurrent = LocalDateTime.ofInstant(currentTime.toInstant(), currentTime.getTimeZone().toZoneId()).toLocalDate().minusDays(30);
+			
+			List<ParameterPair> parameters = new LinkedList<>();
+			parameters.add(new ParameterPair("int", Integer.toString(buyerId)));
+			parameters.add(new ParameterPair("LocalDate", Long.toString(thirtyDaysBeforeCurrent.toEpochDay())));
+
+			List<BigDecimal> transactionAmountList = this.getStatementHandler().executeSelectListStatement(connection, selectQuery, parameters, BigDecimal.class);
+			
+			return transactionAmountList.stream().reduce(BigDecimal.ZERO, BigDecimal::add);
 		} catch (SQLException e) {
 			e.printStackTrace();
 			return null;

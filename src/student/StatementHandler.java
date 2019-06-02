@@ -9,6 +9,7 @@ import java.sql.SQLException;
 import java.sql.Statement;
 import java.sql.Timestamp;
 import java.sql.Types;
+import java.time.LocalDate;
 import java.util.Calendar;
 import java.util.LinkedList;
 import java.util.List;
@@ -137,7 +138,15 @@ public class StatementHandler {
 					long timeInMillis = Long.parseLong(argumentPair.getValue());
 					Timestamp ts = new Timestamp(timeInMillis);
 					statement.setTimestamp(paramIndex++, ts);
-					
+					break;
+				case "LocalDate":
+					long epoch = Long.parseLong(argumentPair.getValue());
+					LocalDate date = LocalDate.ofEpochDay(epoch);
+					statement.setObject(paramIndex++, date);
+					break;
+				case "boolean":
+					statement.setBoolean(paramIndex++, Boolean.parseBoolean(argumentPair.getValue()));
+					break;
 				default:
 					System.err.println("Unknown type: " + type);
 					break;

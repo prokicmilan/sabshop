@@ -8,7 +8,9 @@ import java.util.Calendar;
 import java.util.LinkedList;
 import java.util.List;
 
+import operations.GeneralOperations;
 import operations.OrderOperations;
+import operations.ShopOperations;
 
 public class pm160695_OrderOperations extends OperationImplementation implements OrderOperations {
 
@@ -140,20 +142,81 @@ public class pm160695_OrderOperations extends OperationImplementation implements
 
 	@Override
 	public int completeOrder(int orderId) {
-		// TODO Auto-generated method stub
-		return 0;
+		try (Connection connection = DriverManager.getConnection(this.getConnectionString())) {
+			try {
+				connection.setAutoCommit(false);
+				
+				GeneralOperations generalOperations = new pm160695_GeneralOperations();
+				Calendar currentTime = generalOperations.getCurrentTime();
+				
+				String updateOrderQuery = "update [Order] set state = ?, sentTime = ? where id = ?";
+				
+				List<ParameterPair> orderUpdateParams = new LinkedList<>();
+				orderUpdateParams.add(new ParameterPair("String", "sent"));
+				orderUpdateParams.add(new ParameterPair("Calendar", Long.toString(currentTime.getTimeInMillis())));
+				orderUpdateParams.add(new ParameterPair("int", Integer.toString(orderId)));
+				
+				String updateBuyerQuery = "update Buyer set balance = balance - ? where id = ?";
+				
+				int buyerId = this.getBuyer(orderId);
+				BigDecimal finalPrice = this.calculateFinalPrice(orderId);
+				BigDecimal discount = this.calculateDiscountSum(orderId);
+
+				List<ParameterPair> buyerUpdateParams = new LinkedList<>();
+				buyerUpdateParams.add(new ParameterPair("BigDecimal", finalPrice.toString()));
+				buyerUpdateParams.add(new ParameterPair("int", Integer.toString(buyerId)));
+				
+				String insertIntoTransactionQuery = "insert into [Transaction] (orderId, buyerId, timeOfExecution, transactionAmount, discountAmount, additionalDiscount) "
+												  + "values (?, ?, ?, ?, ?, ?)";
+				
+				boolean hasExtraDiscount = this.hasExtraDiscount(buyerId);
+				
+				List<ParameterPair> transactionInsertParams = new LinkedList<>();
+				
+				transactionInsertParams.add(new ParameterPair("int", Integer.toString(orderId)));
+				transactionInsertParams.add(new ParameterPair("int", Integer.toString(buyerId)));
+				transactionInsertParams.add(new ParameterPair("Calendar", Long.toString(currentTime.getTimeInMillis())));
+				transactionInsertParams.add(new ParameterPair("BigDecimal", finalPrice.toString()));
+				transactionInsertParams.add(new ParameterPair("BigDecimal", discount.toString()));
+				transactionInsertParams.add(new ParameterPair("boolean", Boolean.toString(hasExtraDiscount)));
+				
+				this.getStatementHandler().executeUpdateStatementAndGetId(connection, updateOrderQuery, orderUpdateParams);
+				this.getStatementHandler().executeUpdateStatementAndGetId(connection, updateBuyerQuery, buyerUpdateParams);
+				this.getStatementHandler().executeUpdateStatementAndGetId(connection, insertIntoTransactionQuery, transactionInsertParams);
+				
+				connection.commit();
+			} catch (SQLException e) {
+				connection.rollback();
+				throw e;
+			} finally {
+				connection.setAutoCommit(true);
+			}
+			return -1;
+		} catch (SQLException e) {
+			e.printStackTrace();
+			return -1;
+		}
 	}
 
 	@Override
 	public BigDecimal getFinalPrice(int orderId) {
-		// TODO Auto-generated method stub
-		return null;
+		String orderState = this.getState(orderId);
+		if (!"sent".equalsIgnoreCase(orderState) && !"completed".equalsIgnoreCase(orderState)) {
+			// porudzbina nije u statusu "sent" ili "completed"
+			return BigDecimal.valueOf(-1);
+		}
+		return this.calculateFinalPrice(orderId);
 	}
 
 	@Override
-	public float getDiscountSum(int orderId) {
-		// TODO Auto-generated method stub
-		return 0;
+	public BigDecimal getDiscountSum(int orderId) {
+		String orderState = this.getState(orderId);
+		if (!"sent".equalsIgnoreCase(orderState) && !"completed".equalsIgnoreCase(orderState)) {
+			// porudzbina nije u statusu "sent" ili "completed"
+			return BigDecimal.valueOf(-1);
+		}
+		
+		return this.calculateDiscountSum(orderId);
 	}
 
 	@Override
@@ -210,7 +273,6 @@ public class pm160695_OrderOperations extends OperationImplementation implements
 			parameters.add(new ParameterPair("int", Integer.toString(orderId)));
 			
 			Integer retVal = this.getStatementHandler().executeSelectStatement(connection, query, parameters, Integer.class);
-			
 			return retVal != null ? retVal.intValue() : -1;
 		} catch (SQLException e) {
 			e.printStackTrace();
@@ -223,5 +285,88 @@ public class pm160695_OrderOperations extends OperationImplementation implements
 		// TODO Auto-generated method stub
 		return 0;
 	}
+	
+	private boolean hasExtraDiscount(int buyerId) {
+		pm160695_TransactionOperations transactionOperations = new pm160695_TransactionOperations();
+		
+		return transactionOperations.getTransactionAmountLastThirtyDaysForBuyer(buyerId).compareTo(BigDecimal.valueOf(10000)) >= 0;
+	}
 
+	private BigDecimal calculateFinalPrice(int orderId) {
+		pm160695_ArticleOperations articleOperations = new pm160695_ArticleOperations();
+		
+		List<Integer> articlesInOrder = this.getItems(orderId);
+		long totalPrice = 0;
+		
+		for (Integer articleId : articlesInOrder) {
+			int articlePrice = articleOperations.getArticlePrice(articleId);
+			int amount = this.getArticleAmountInOrder(articleId, orderId);
+			totalPrice += articlePrice * amount;
+		}
+		BigDecimal totalDiscount = this.calculateDiscountSum(orderId);
+		
+		return BigDecimal.valueOf(totalPrice).subtract(totalDiscount).setScale(3);
+	}
+	
+	private BigDecimal calculateDiscountSum(int orderId) {
+		ShopOperations shopOperations = new pm160695_ShopOperations();
+		pm160695_ArticleOperations articleOperations = new pm160695_ArticleOperations();
+		
+		List<Integer> articlesInOrder = this.getItems(orderId);
+		BigDecimal totalDiscount = BigDecimal.ZERO;
+		
+		for (Integer articleId : articlesInOrder) {
+			int articlePrice = articleOperations.getArticlePrice(articleId);
+			if (articlePrice == -1) {
+				totalDiscount = BigDecimal.valueOf(-1);
+				break;
+			}
+			
+			int shopId = articleOperations.getShop(articleId);
+			if (shopId == -1) {
+				totalDiscount = BigDecimal.valueOf(-1);
+				break;
+			}
+			
+			int shopDiscount = shopOperations.getDiscount(shopId);
+			if (shopDiscount == -1) {
+				totalDiscount = BigDecimal.valueOf(-1);
+				break;
+			}
+			int amount = this.getArticleAmountInOrder(articleId, orderId);
+			
+			BigDecimal discountValue = BigDecimal.valueOf(articlePrice * amount * (shopDiscount / 100.0));
+			BigDecimal newPrice = BigDecimal.valueOf(articlePrice).subtract(discountValue);
+			
+			int buyerId = this.getBuyer(orderId);
+			if (buyerId == -1) {
+				totalDiscount = BigDecimal.valueOf(-1);
+				break;
+			}
+			if (this.hasExtraDiscount(buyerId)) { 
+				discountValue = discountValue.add(newPrice.multiply(BigDecimal.valueOf(0.02)));
+			}
+			totalDiscount = totalDiscount.add(discountValue);
+		}
+		
+		return totalDiscount.setScale(3);
+	}
+	
+	private int getArticleAmountInOrder(int articleId, int orderId) {
+		try (Connection connection = DriverManager.getConnection(this.getConnectionString())) {
+			String selectQuery = "select amount from ArticleInOrder where articleId = ? and orderId = ?";
+			
+			List<ParameterPair> parameters = new LinkedList<>();
+			parameters.add(new ParameterPair("int", Integer.toString(articleId)));
+			parameters.add(new ParameterPair("int", Integer.toString(orderId)));
+			
+			Integer amount = this.getStatementHandler().executeSelectStatement(connection, selectQuery, parameters, Integer.class);
+			
+			return amount.intValue();
+		} catch (SQLException e) {
+			e.printStackTrace();
+			return -1;
+		}
+	}
+	
 }

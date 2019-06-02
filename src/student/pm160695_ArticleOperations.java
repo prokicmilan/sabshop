@@ -26,5 +26,37 @@ public class pm160695_ArticleOperations extends OperationImplementation implemen
 		}
 		return 0;
 	}
+	
+	public int getArticlePrice(int articleId) {
+		try (Connection connection = DriverManager.getConnection(this.getConnectionString())) {
+			String selectQuery = "select price from Article where id = ?";
+			
+			List<ParameterPair> parameters = new LinkedList<>();
+			parameters.add(new ParameterPair("int", Integer.toString(articleId)));
+			
+			Integer retVal = this.getStatementHandler().executeSelectStatement(connection, selectQuery, parameters, Integer.class);
+			
+			return retVal != -1 ? retVal.intValue() : -1;
+		} catch (SQLException e) {
+			e.printStackTrace();
+			return -1;
+		}
+	}
+	
+	public int getShop(int articleId) {
+		try (Connection connection = DriverManager.getConnection(this.getConnectionString())) {
+			String selectQuery = "select shopId from Article where id = ?";
+			
+			List<ParameterPair> parameters = new LinkedList<>();
+			parameters.add(new ParameterPair("int", Integer.toString(articleId)));
+			
+			Integer retVal = this.getStatementHandler().executeSelectStatement(connection, selectQuery, parameters, Integer.class);
+			
+			return retVal != -1 ? retVal.intValue() : -1;
+		} catch (SQLException e) {
+			e.printStackTrace();
+			return -1;
+		}
+	}
 
 }

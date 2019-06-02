@@ -16,7 +16,9 @@ public class pm160695_GeneralOperations extends OperationImplementation implemen
 	
 	@Override
 	public void setInitialTime(Calendar time) {
-		currentTime = time;
+		currentTime = Calendar.getInstance();
+		currentTime.clear();
+		currentTime.setTimeInMillis(time.getTimeInMillis());
 	}
 
 	@Override
@@ -37,6 +39,7 @@ public class pm160695_GeneralOperations extends OperationImplementation implemen
 			queries.addAll(Arrays.asList(new String[] {
 					"delete from ArticleInOrder",
 					"delete from Article",
+					"delete from [Transaction]",
 					"delete from [Order]",
 					"delete from Buyer",
 					"delete from Shop",
