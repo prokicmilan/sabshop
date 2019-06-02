@@ -62,7 +62,7 @@ public class pm160695_ShopOperations extends OperationImplementation implements 
 	@Override
 	public int getCity(int shopId) {
 		try (Connection connection = DriverManager.getConnection(this.getConnectionString())) {
-			String query = "select cityId from Shop where shopId = ?";
+			String query = "select cityId from Shop where id = ?";
 			
 			List<ParameterPair> parameters = new LinkedList<>();
 			parameters.add(new ParameterPair("int", Integer.toString(shopId)));

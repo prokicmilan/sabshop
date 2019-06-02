@@ -5,9 +5,13 @@ import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.SQLException;
 import java.util.Calendar;
+import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Set;
 
+import operations.ArticleOperations;
+import operations.BuyerOperations;
 import operations.GeneralOperations;
 import operations.OrderOperations;
 import operations.ShopOperations;
@@ -142,23 +146,56 @@ public class pm160695_OrderOperations extends OperationImplementation implements
 
 	@Override
 	public int completeOrder(int orderId) {
+		GeneralOperations generalOperations = new pm160695_GeneralOperations();
+		pm160695_ArticleOperations articleOperations = new pm160695_ArticleOperations();
+		ShopOperations shopOperations = new pm160695_ShopOperations();
+		BuyerOperations buyerOperations = new pm160695_BuyerOperations();
+		
+		Calendar currentTime = generalOperations.getCurrentTime();
+		int buyerId = this.getBuyer(orderId);
+		
+		// dohvatamo listu svih proizvoda u porudzbini
+		List<Integer> articlesInOrder = this.getItems(orderId);
+		Set<Integer> shopsInOrder = new HashSet<>();
+		
+		// za svaki proizvod u porudzbini dohvatamo prodavnicu kojoj pripada i stavljamo njen id u set
+		for (Integer articleId : articlesInOrder) {
+			shopsInOrder.add(articleOperations.getShop(articleId));
+		}
+		Set<Integer> cities = new HashSet<>();
+		// za svaku prodavnicu iz seta dohvatamo grad kom pripada i stavljamo njegov id u set
+		for (Integer shopId : shopsInOrder) {
+			cities.add(shopOperations.getCity(shopId));
+		}
+		// dohvatamo grad kom pripada kupac
+		int buyerCityId = buyerOperations.getCity(buyerId);
+		int shortestCityId = -1;
+		int shortestCityDistance = Integer.MAX_VALUE;
+		for (Integer cityId : cities) {
+			// za sve gradove prodavnica iz porudzbine odredjujemo najkraci put i trazimo minimalan medju njima
+			List<ShortestPathNode> shortestPath = ShortestPathUtil.determineShortestPath(buyerCityId, cityId);
+			ShortestPathNode node = shortestPath.get(0);
+			if (shortestCityDistance > node.getCost()) {
+				shortestCityId = node.getCityId();
+				shortestCityDistance = node.getCost();
+			}
+		}
+		
 		try (Connection connection = DriverManager.getConnection(this.getConnectionString())) {
 			try {
 				connection.setAutoCommit(false);
 				
-				GeneralOperations generalOperations = new pm160695_GeneralOperations();
-				Calendar currentTime = generalOperations.getCurrentTime();
-				
-				String updateOrderQuery = "update [Order] set state = ?, sentTime = ? where id = ?";
+				String updateOrderQuery = "update [Order] set state = ?, sentTime = ?, cityId = ?, timeToPhaseEnd = ? where id = ?";
 				
 				List<ParameterPair> orderUpdateParams = new LinkedList<>();
 				orderUpdateParams.add(new ParameterPair("String", "sent"));
 				orderUpdateParams.add(new ParameterPair("Calendar", Long.toString(currentTime.getTimeInMillis())));
+				orderUpdateParams.add(new ParameterPair("int", Integer.toString(shortestCityId)));
+				orderUpdateParams.add(new ParameterPair("int", Integer.toString(shortestCityDistance)));
 				orderUpdateParams.add(new ParameterPair("int", Integer.toString(orderId)));
 				
 				String updateBuyerQuery = "update Buyer set balance = balance - ? where id = ?";
 				
-				int buyerId = this.getBuyer(orderId);
 				BigDecimal finalPrice = this.calculateFinalPrice(orderId);
 				BigDecimal discount = this.calculateDiscountSum(orderId);
 

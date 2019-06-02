@@ -90,7 +90,26 @@ public class pm160695_CityOperations extends OperationImplementation implements 
 		}
 	}
 	
-	protected int getCityIdByName(String cityName) {
+	public int getDistanceBetweenCities(int cityId1, int cityId2) {
+		try (Connection connection = DriverManager.getConnection(this.getConnectionString())) {
+			String query = "select distance from Line where (cityId1 = ? and cityId2 = ?) or (cityId1 = ? and cityId2 = ?)";
+			
+			List<ParameterPair> parameters = new LinkedList<>();
+			parameters.add(new ParameterPair("int", Integer.toString(cityId1)));
+			parameters.add(new ParameterPair("int", Integer.toString(cityId2)));
+			parameters.add(new ParameterPair("int", Integer.toString(cityId2)));
+			parameters.add(new ParameterPair("int", Integer.toString(cityId1)));
+
+			Integer retVal = this.getStatementHandler().executeSelectStatement(connection, query, parameters, Integer.class);
+			
+			return retVal != -1 ? retVal.intValue() : -1;
+		} catch (SQLException e) {
+			e.printStackTrace();
+			return -1;
+		}
+	}
+	
+	public int getCityIdByName(String cityName) {
 		try (Connection connection = DriverManager.getConnection(this.getConnectionString())) {
 			String query = "select id from City where cityName = ?";
 			
