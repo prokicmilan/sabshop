@@ -3,18 +3,19 @@ package student;
 public class ShortestPathNode {
 
 	private int cityId;
-	private int prevCityId;
+	private int nextCityId;
 	private int cost;
+	private int distance;
 	
 	public ShortestPathNode(int cityId, int prevCityId) {
 		this.cityId = cityId;
-		this.prevCityId = prevCityId;
+		this.nextCityId = prevCityId;
 		this.cost = Integer.MAX_VALUE;
 	}
 	
 	public ShortestPathNode(int cityId, int prevCityId, int cost) {
 		this.cityId = cityId;
-		this.prevCityId = prevCityId;
+		this.nextCityId = prevCityId;
 		this.cost = cost;
 	}
 	
@@ -26,12 +27,12 @@ public class ShortestPathNode {
 		this.cityId = cityId;
 	}
 	
-	public int getPrevCityId() {
-		return prevCityId;
+	public int getNextCityId() {
+		return nextCityId;
 	}
 	
-	public void setPrevCityId(int prevCityId) {
-		this.prevCityId = prevCityId;
+	public void setNextCityId(int nextCityId) {
+		this.nextCityId = nextCityId;
 	}
 	
 	public int getCost() {
@@ -40,6 +41,14 @@ public class ShortestPathNode {
 	
 	public void setCost(int cost) {
 		this.cost = cost;
+	}
+
+	public int getDistance() {
+		return distance;
+	}
+
+	public void setDistance(int distance) {
+		this.distance = distance;
 	}
 
 	@Override
@@ -66,7 +75,7 @@ public class ShortestPathNode {
 
 	@Override
 	public String toString() {
-		return "cityId=" + cityId + ", prevCityId=" + prevCityId + ", cost=" + cost;
+		return "cityId=" + cityId + ", nextCityId=" + nextCityId + ", cost=" + cost + ", distance=" + distance;
 	}
 	
 }

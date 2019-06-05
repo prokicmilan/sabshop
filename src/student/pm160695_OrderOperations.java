@@ -4,13 +4,15 @@ import java.math.BigDecimal;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.SQLException;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.Calendar;
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Set;
 
-import operations.ArticleOperations;
 import operations.BuyerOperations;
 import operations.GeneralOperations;
 import operations.OrderOperations;
@@ -171,27 +173,48 @@ public class pm160695_OrderOperations extends OperationImplementation implements
 		int buyerCityId = buyerOperations.getCity(buyerId);
 		int shortestCityId = -1;
 		int shortestCityDistance = Integer.MAX_VALUE;
+		int longestCityDistance = -1;
+		List<ShortestPathNode> shortestPath = null;
+		List<ShortestPathNode> actualPath = null;
 		for (Integer cityId : cities) {
-			// za sve gradove prodavnica iz porudzbine odredjujemo najkraci put i trazimo minimalan medju njima
-			List<ShortestPathNode> shortestPath = ShortestPathUtil.determineShortestPath(buyerCityId, cityId);
-			ShortestPathNode node = shortestPath.get(0);
+			// za sve gradove prodavnica iz porudzbine odredjujemo najkraci put do grada kupca i trazimo minimalan i maksimalan medju njima
+			// minimalan put odredjuje "centralnu" prodavnicu iz koje ce porudzbina krenuti
+			// maksimalan put odredjuje ukupno vreme potrebno da porudzbina stigne do kupca
+			List<ShortestPathNode> sp = ShortestPathUtil.determineShortestPath(buyerCityId, cityId);
+			ShortestPathNode node = sp.get(0);
 			if (shortestCityDistance > node.getCost()) {
 				shortestCityId = node.getCityId();
 				shortestCityDistance = node.getCost();
+				shortestPath = sp;
+			}
+			if (longestCityDistance < node.getCost()) {
+				longestCityDistance = node.getCost();
+				actualPath = sp;
 			}
 		}
+		
+		// prolazimo kroz actualPath i sumiramo udaljenosti dok ne dodjemo do pocetka shortestPath-a
+		int distance = 0;
+		ShortestPathNode centralNode = shortestPath.get(0);
+		for (ShortestPathNode node : actualPath) {
+			if (node.getCityId() == centralNode.getCityId()) break;
+			distance += node.getDistance();
+		}
+		
+		ShortestPathNode node = shortestPath.get(0);
+		node.setDistance(node.getDistance() + distance);
 		
 		try (Connection connection = DriverManager.getConnection(this.getConnectionString())) {
 			try {
 				connection.setAutoCommit(false);
 				
-				String updateOrderQuery = "update [Order] set state = ?, sentTime = ?, cityId = ?, timeToPhaseEnd = ? where id = ?";
+				
+				String updateOrderQuery = "update [Order] set state = ?, sentTime = ?, cityId = ? where id = ?";
 				
 				List<ParameterPair> orderUpdateParams = new LinkedList<>();
 				orderUpdateParams.add(new ParameterPair("String", "sent"));
 				orderUpdateParams.add(new ParameterPair("Calendar", Long.toString(currentTime.getTimeInMillis())));
 				orderUpdateParams.add(new ParameterPair("int", Integer.toString(shortestCityId)));
-				orderUpdateParams.add(new ParameterPair("int", Integer.toString(shortestCityDistance)));
 				orderUpdateParams.add(new ParameterPair("int", Integer.toString(orderId)));
 				
 				String updateBuyerQuery = "update Buyer set balance = balance - ? where id = ?";
@@ -217,9 +240,42 @@ public class pm160695_OrderOperations extends OperationImplementation implements
 				transactionInsertParams.add(new ParameterPair("BigDecimal", discount.toString()));
 				transactionInsertParams.add(new ParameterPair("boolean", Boolean.toString(hasExtraDiscount)));
 				
-				this.getStatementHandler().executeUpdateStatementAndGetId(connection, updateOrderQuery, orderUpdateParams);
-				this.getStatementHandler().executeUpdateStatementAndGetId(connection, updateBuyerQuery, buyerUpdateParams);
-				this.getStatementHandler().executeUpdateStatementAndGetId(connection, insertIntoTransactionQuery, transactionInsertParams);
+				String insertIntoOrderPathQuery = "insert into OrderPath (orderId, cityId, time, nextCityId) values (?, ?, ?, ?)";
+				
+				
+				Integer retVal;
+				
+				for (ShortestPathNode spn : shortestPath) {
+					List<ParameterPair> orderPathInsertParams = new LinkedList<>();
+					orderPathInsertParams.add(new ParameterPair("int", Integer.toString(orderId)));
+					orderPathInsertParams.add(new ParameterPair("int", Integer.toString(spn.getCityId())));
+					orderPathInsertParams.add(new ParameterPair("int", Integer.toString(spn.getDistance())));
+					orderPathInsertParams.add(new ParameterPair("int", Integer.toString(spn.getNextCityId())));
+					retVal = this.getStatementHandler().executeUpdateStatementAndGetId(connection, insertIntoOrderPathQuery, orderPathInsertParams);
+					if (retVal == -1) {
+						connection.rollback();
+						return -1;
+					}
+				}
+				
+				// radimo update porudzbine
+				retVal = this.getStatementHandler().executeUpdateStatementAndGetId(connection, updateOrderQuery, orderUpdateParams);
+				if (retVal == -1) {
+					connection.rollback();
+					return -1;
+				}
+				// radimo update novca kod kupca
+				retVal = this.getStatementHandler().executeUpdateStatementAndGetId(connection, updateBuyerQuery, buyerUpdateParams);
+				if (retVal == -1) {
+					connection.rollback();
+					return -1;
+				}
+				// radimo insert u transakciju
+				retVal = this.getStatementHandler().executeUpdateStatementAndGetId(connection, insertIntoTransactionQuery, transactionInsertParams);
+				if (retVal == -1) {
+					connection.rollback();
+					return -1;
+				}
 				
 				connection.commit();
 			} catch (SQLException e) {
@@ -228,7 +284,7 @@ public class pm160695_OrderOperations extends OperationImplementation implements
 			} finally {
 				connection.setAutoCommit(true);
 			}
-			return -1;
+			return 1;
 		} catch (SQLException e) {
 			e.printStackTrace();
 			return -1;
@@ -242,6 +298,7 @@ public class pm160695_OrderOperations extends OperationImplementation implements
 			// porudzbina nije u statusu "sent" ili "completed"
 			return BigDecimal.valueOf(-1);
 		}
+		
 		return this.calculateFinalPrice(orderId);
 	}
 
@@ -319,8 +376,105 @@ public class pm160695_OrderOperations extends OperationImplementation implements
 
 	@Override
 	public int getLocation(int orderId) {
-		// TODO Auto-generated method stub
-		return 0;
+		try (Connection connection = DriverManager.getConnection(this.getConnectionString())) {
+			String query = "select cityId from [Order] where id = ?";
+			
+			List<ParameterPair> parameters = new LinkedList<>();
+			parameters.add(new ParameterPair("int", Integer.toString(orderId)));
+			
+			Integer cityId = this.getStatementHandler().executeSelectStatement(connection, query, parameters, Integer.class);
+			
+			return cityId != null ? cityId.intValue() : -1;
+		} catch (SQLException e) {
+			e.printStackTrace();
+			return -1;
+		}
+	}
+	
+	public int updateTimeForOrders() {
+		List<Integer> orders = this.getUndeliveredOrders();
+		try (Connection connection = DriverManager.getConnection(this.getConnectionString())) {
+			String selectCityIdQuery = "select cityId from [Order] where id = ?";
+			
+			List<Integer> cities = new LinkedList<>();
+			for (Integer orderId : orders) {
+				// za svaku porudzbinu dohvatamo grad u kom se trenutno nalazi i dodajemo ga u listu gradova
+				List<ParameterPair> parameters = new LinkedList<>();
+				parameters.add(new ParameterPair("int", Integer.toString(orderId)));
+				
+				Integer cityId = this.getStatementHandler().executeSelectStatement(connection, selectCityIdQuery, parameters, Integer.class);
+				cities.add(cityId);
+			}
+			
+			String selectTimeQuery = "select time from OrderPath where orderId = ? and cityId = ?";
+
+			Iterator<Integer> orderIterator = orders.iterator();
+			Iterator<Integer> citiesIterator = cities.iterator();
+			
+			while (orderIterator.hasNext() && citiesIterator.hasNext()) {
+				// idemo kroz liste gradova i porudzbina
+				Integer orderId = orderIterator.next();
+				Integer cityId = citiesIterator.next();
+				List<ParameterPair> parameters = new LinkedList<>();
+				parameters.add(new ParameterPair("int", Integer.toString(orderId)));
+				parameters.add(new ParameterPair("int", Integer.toString(cityId)));
+
+				// dohvatamo trenutno preostalo vreme
+				Integer time = this.getStatementHandler().executeSelectStatement(connection, selectTimeQuery, parameters, Integer.class);
+				if (time > 0) {
+					time--;
+				}
+				
+				// upisujemo novo vreme u OrderPath
+				String updateOrderPathQuery = "update OrderPath set time = ? where orderId = ? and cityId = ?";
+				
+				List<ParameterPair> updateOrderPathParams = new LinkedList<>();
+				updateOrderPathParams.add(new ParameterPair("int", time.toString()));
+				updateOrderPathParams.add(new ParameterPair("int", Integer.toString(orderId)));
+				updateOrderPathParams.add(new ParameterPair("int", Integer.toString(cityId)));
+				
+				this.getStatementHandler().executeUpdateStatementAndGetId(connection, updateOrderPathQuery, updateOrderPathParams);
+				
+				if (time == 0) {
+					// ako je vreme dostiglo 0, dohvatamo sledeci grad koji cemo upisati u Order
+					String selectNextCityIdQuery = "select nextCityId from OrderPath where orderId = ? and cityId = ?";
+					
+					List<ParameterPair> selectNextCityIdParameters = new LinkedList<>();
+					selectNextCityIdParameters.add(new ParameterPair("int", Integer.toString(orderId)));
+					selectNextCityIdParameters.add(new ParameterPair("int", Integer.toString(cityId)));
+					
+					Integer nextCityId = this.getStatementHandler().executeSelectStatement(connection, selectNextCityIdQuery, selectNextCityIdParameters, Integer.class);
+					if (nextCityId == -1) {
+						// ako je nextCityId -1, upisujemo recieved time u Order kao current - 1 dan
+						GeneralOperations generalOperations = new pm160695_GeneralOperations();
+						Calendar currentTime = generalOperations.getCurrentTime();
+						LocalDate recievedTime = LocalDateTime.ofInstant(currentTime.toInstant(), currentTime.getTimeZone().toZoneId()).toLocalDate().minusDays(1);
+						
+						String updateOrderQuery = "update [Order] set recievedTime = ? where id = ?";
+						
+						List<ParameterPair> updateOrderParams = new LinkedList<>();
+						updateOrderParams.add(new ParameterPair("LocalDate", Long.toString(recievedTime.toEpochDay())));
+						updateOrderParams.add(new ParameterPair("int", Integer.toString(orderId)));
+						
+						this.getStatementHandler().executeUpdateStatementAndGetId(connection, updateOrderQuery, updateOrderParams);
+					}
+					else {
+						// u suprotnom, upisujemo novi cityId u Order
+						String updateOrderQuery = "update [Order] set cityId = ? where id = ?";
+						
+						List<ParameterPair> updateOrderParams = new LinkedList<>();
+						updateOrderParams.add(new ParameterPair("int", Integer.toString(nextCityId)));
+						updateOrderParams.add(new ParameterPair("int", Integer.toString(orderId)));
+						
+						this.getStatementHandler().executeUpdateStatementAndGetId(connection, updateOrderQuery, updateOrderParams);
+					}
+				}
+			}
+		} catch (SQLException e) {
+			e.printStackTrace();
+			return -1;
+		}
+		return -1;
 	}
 	
 	private boolean hasExtraDiscount(int buyerId) {
@@ -328,7 +482,7 @@ public class pm160695_OrderOperations extends OperationImplementation implements
 		
 		return transactionOperations.getTransactionAmountLastThirtyDaysForBuyer(buyerId).compareTo(BigDecimal.valueOf(10000)) >= 0;
 	}
-
+	
 	private BigDecimal calculateFinalPrice(int orderId) {
 		pm160695_ArticleOperations articleOperations = new pm160695_ArticleOperations();
 		
@@ -339,7 +493,7 @@ public class pm160695_OrderOperations extends OperationImplementation implements
 			int articlePrice = articleOperations.getArticlePrice(articleId);
 			int amount = this.getArticleAmountInOrder(articleId, orderId);
 			totalPrice += articlePrice * amount;
-		}
+		} 
 		BigDecimal totalDiscount = this.calculateDiscountSum(orderId);
 		
 		return BigDecimal.valueOf(totalPrice).subtract(totalDiscount).setScale(3);
@@ -403,6 +557,17 @@ public class pm160695_OrderOperations extends OperationImplementation implements
 		} catch (SQLException e) {
 			e.printStackTrace();
 			return -1;
+		}
+	}
+	
+	private List<Integer> getUndeliveredOrders() {
+		try (Connection connection = DriverManager.getConnection(this.getConnectionString())) {
+			String query = "select id from [Order] where recievedTime is null";
+			
+			return this.getStatementHandler().executeSelectListStatement(connection, query, null, Integer.class);
+		} catch (SQLException e) {
+			e.printStackTrace();
+			return null;
 		}
 	}
 	

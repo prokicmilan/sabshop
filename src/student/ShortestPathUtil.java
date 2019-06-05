@@ -18,7 +18,6 @@ public class ShortestPathUtil {
 	static {
 		pm160695_CityOperations cityOperations = new pm160695_CityOperations();
 		Map<Integer, List<ShortestPathNode>> connected = new HashMap<>();
-		PriorityQueue<ShortestPathNode> queue = new PriorityQueue<>(Comparator.comparing(ShortestPathNode::getCost));
 		
 		// dohvatamo listu svih gradova
 		List<Integer> citiesList = cityOperations.getCities();
@@ -67,16 +66,18 @@ public class ShortestPathUtil {
 				if (visitedNodes.contains(currentNodeStatus)) continue;
 				if (currentNode.getCost() + neighbour.getCost() < currentNodeStatus.getCost()) {
 					currentNodeStatus.setCost(currentNode.getCost() + neighbour.getCost());
-					currentNodeStatus.setPrevCityId(currentNode.getCityId());
+					currentNodeStatus.setNextCityId(currentNode.getCityId());
+					currentNodeStatus.setDistance(neighbour.getCost());
 				}
 			}
 			visitedNodes.add(currentNode);
 		}
 		List<ShortestPathNode> shortestPath = new LinkedList<>();
-		while (currentNode.getPrevCityId() != -1) {
+		while (currentNode.getNextCityId() != -1) {
 			shortestPath.add(currentNode);
-			currentNode = nodeMap.get(currentNode.getPrevCityId());
+			currentNode = nodeMap.get(currentNode.getNextCityId());
 		}
+		shortestPath.add(currentNode);
 
 		return shortestPath;
 	}

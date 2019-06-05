@@ -23,7 +23,13 @@ public class pm160695_GeneralOperations extends OperationImplementation implemen
 
 	@Override
 	public Calendar time(int days) {
-		currentTime.add(Calendar.DATE, days);
+		pm160695_OrderOperations orderOperations = new pm160695_OrderOperations();
+		
+		while (days != 0) {
+			currentTime.add(Calendar.DATE, 1);
+			days--;
+			orderOperations.updateTimeForOrders();
+		}
 		return currentTime;
 	}
 
@@ -40,6 +46,7 @@ public class pm160695_GeneralOperations extends OperationImplementation implemen
 					"delete from ArticleInOrder",
 					"delete from Article",
 					"delete from [Transaction]",
+					"delete from OrderPath",
 					"delete from [Order]",
 					"delete from Buyer",
 					"delete from Shop",
