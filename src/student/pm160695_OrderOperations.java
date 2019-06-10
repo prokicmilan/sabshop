@@ -484,19 +484,20 @@ public class pm160695_OrderOperations extends OperationImplementation implements
 	}
 	
 	private BigDecimal calculateFinalPrice(int orderId) {
-		pm160695_ArticleOperations articleOperations = new pm160695_ArticleOperations();
-		
-		List<Integer> articlesInOrder = this.getItems(orderId);
-		long totalPrice = 0;
-		
-		for (Integer articleId : articlesInOrder) {
-			int articlePrice = articleOperations.getArticlePrice(articleId);
-			int amount = this.getArticleAmountInOrder(articleId, orderId);
-			totalPrice += articlePrice * amount;
-		} 
-		BigDecimal totalDiscount = this.calculateDiscountSum(orderId);
-		
-		return BigDecimal.valueOf(totalPrice).subtract(totalDiscount).setScale(3);
+		try (Connection connection = DriverManager.getConnection(this.getConnectionString())) {
+			String callQuery = "{CALL SP_FINAL_PRICE (?, ?) }";
+			
+			List<ParameterPair> parameters = new LinkedList<>();
+			parameters.add(new ParameterPair("int", Integer.toString(orderId)));
+			parameters.add(new ParameterPair("BigDecimal", BigDecimal.ZERO.toString()));
+			
+			BigDecimal finalPrice = this.getStatementHandler().executeCallableStatement(connection, callQuery, parameters, BigDecimal.class);
+			
+			return finalPrice.setScale(3);
+		} catch (SQLException e) {
+			e.printStackTrace();
+			return BigDecimal.ZERO;
+		}
 	}
 	
 	private BigDecimal calculateDiscountSum(int orderId) {

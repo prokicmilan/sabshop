@@ -42,11 +42,12 @@ public class StatementHandler {
 				System.err.println("Unsupported type class: " + className);
 				break;
 		}
-		statement.registerOutParameter(1, type);
-		this.setParameters(statement, parameters, 2);
+//		this.setParameters(statement, parameters);
+		statement.setInt(1, Integer.parseInt(parameters.get(0).getValue()));
+		statement.registerOutParameter(2, type);
 		statement.execute();
 		
-		return (T) statement.getObject(1); 
+		return (T) statement.getObject(2); 
 	}
 	
 	public <T> T executeSelectStatement(Connection connection, String query, List<ParameterPair> parameters, Class<T> typeClass) throws SQLException {

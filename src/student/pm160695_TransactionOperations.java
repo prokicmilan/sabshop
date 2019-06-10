@@ -178,9 +178,18 @@ public class pm160695_TransactionOperations extends OperationImplementation impl
 	@Override
 	public BigDecimal getSystemProfit() {
 		try (Connection connection = DriverManager.getConnection(this.getConnectionString())) {
-			String callQuery = "{? = CALL CalculateSystemProfit }";
-			BigDecimal profit = this.getStatementHandler().executeCallableStatement(connection, callQuery, null, BigDecimal.class);
-			return profit.setScale(3);
+			String totalPaidByCustomersQuery = "select sum(transactionAmount) from [Transaction] where buyerId is not null";
+			String totalPaidToShopsQuery = "select sum(transactionAmount) from [Transaction] where shopId is not null";
+			
+			BigDecimal paidByCustomers = this.getStatementHandler().executeSelectStatement(connection, totalPaidByCustomersQuery, null, BigDecimal.class);
+			BigDecimal paidToShops = this.getStatementHandler().executeSelectStatement(connection, totalPaidToShopsQuery, null, BigDecimal.class);
+			
+			if (paidByCustomers == null || paidToShops == null || paidByCustomers.compareTo(BigDecimal.ZERO) == 0 || paidToShops.compareTo(BigDecimal.ZERO) == 0) {
+				return BigDecimal.ZERO.setScale(3);
+			}
+			else {
+				return paidByCustomers.subtract(paidToShops).setScale(3);
+			}
 		} catch (SQLException e) {
 			e.printStackTrace();
 			return null;
