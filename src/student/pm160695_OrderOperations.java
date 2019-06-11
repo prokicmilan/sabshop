@@ -445,15 +445,16 @@ public class pm160695_OrderOperations extends OperationImplementation implements
 					
 					Integer nextCityId = this.getStatementHandler().executeSelectStatement(connection, selectNextCityIdQuery, selectNextCityIdParameters, Integer.class);
 					if (nextCityId == -1) {
-						// ako je nextCityId -1, upisujemo recieved time u Order kao current - 1 dan
+						// ako je nextCityId -1, upisujemo recieved time u Order kao current - 1 dan i postavljamo state na 'arrived'
 						GeneralOperations generalOperations = new pm160695_GeneralOperations();
 						Calendar currentTime = generalOperations.getCurrentTime();
 						LocalDate recievedTime = LocalDateTime.ofInstant(currentTime.toInstant(), currentTime.getTimeZone().toZoneId()).toLocalDate().minusDays(1);
 						
-						String updateOrderQuery = "update [Order] set recievedTime = ? where id = ?";
+						String updateOrderQuery = "update [Order] set recievedTime = ?, [state] = ? where id = ?";
 						
 						List<ParameterPair> updateOrderParams = new LinkedList<>();
 						updateOrderParams.add(new ParameterPair("LocalDate", Long.toString(recievedTime.toEpochDay())));
+						updateOrderParams.add(new ParameterPair("String", "arrived"));
 						updateOrderParams.add(new ParameterPair("int", Integer.toString(orderId)));
 						
 						this.getStatementHandler().executeUpdateStatementAndGetId(connection, updateOrderQuery, updateOrderParams);
