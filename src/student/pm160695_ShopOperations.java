@@ -122,24 +122,6 @@ public class pm160695_ShopOperations extends OperationImplementation implements 
 	}
 
 	@Override
-	public int getArticleCount(int shopId, int articleId) {
-		try (Connection connection = DriverManager.getConnection(this.getConnectionString())) {
-			String query = "select itemsAvailable from Article where shopId = ? and id = ?";
-			
-			List<ParameterPair> parameters = new LinkedList<>();
-			parameters.add(new ParameterPair("int", Integer.toString(shopId)));
-			parameters.add(new ParameterPair("int", Integer.toString(articleId)));
-			
-			Integer retVal = this.getStatementHandler().executeSelectStatement(connection, query, parameters, Integer.class);
-			
-			return retVal != null ? retVal.intValue() : -1;
-		} catch (SQLException e) {
-			e.printStackTrace();
-			return -1;
-		}
-	}
-
-	@Override
 	public List<Integer> getArticles(int shopId) {
 		try (Connection connection = DriverManager.getConnection(this.getConnectionString())) {
 			String query = "select id from Article where shopId = ?";
@@ -161,6 +143,23 @@ public class pm160695_ShopOperations extends OperationImplementation implements 
 			
 			List<ParameterPair> parameters = new LinkedList<>();
 			parameters.add(new ParameterPair("int", Integer.toString(shopId)));
+			
+			Integer retVal = this.getStatementHandler().executeSelectStatement(connection, query, parameters, Integer.class);
+			
+			return retVal != null ? retVal.intValue() : -1;
+		} catch (SQLException e) {
+			e.printStackTrace();
+			return -1;
+		}
+	}
+
+	@Override
+	public int getArticleCount(int articleId) {
+		try (Connection connection = DriverManager.getConnection(this.getConnectionString())) {
+			String query = "select itemsAvailable from Article where id = ?";
+			
+			List<ParameterPair> parameters = new LinkedList<>();
+			parameters.add(new ParameterPair("int", Integer.toString(articleId)));
 			
 			Integer retVal = this.getStatementHandler().executeSelectStatement(connection, query, parameters, Integer.class);
 			

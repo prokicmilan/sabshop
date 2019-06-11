@@ -1,13 +1,6 @@
 package tests;
 
 import operations.*;
-import student.pm160695_ArticleOperations;
-import student.pm160695_BuyerOperations;
-import student.pm160695_CityOperations;
-import student.pm160695_GeneralOperations;
-import student.pm160695_OrderOperations;
-import student.pm160695_ShopOperations;
-import student.pm160695_TransactionOperations;
 
 import org.junit.After;
 import org.junit.Assert;
@@ -15,7 +8,6 @@ import org.junit.Before;
 import org.junit.Test;
 
 import java.math.BigDecimal;
-import java.math.RoundingMode;
 import java.util.Calendar;
 
 public class PublicModuleTest {
@@ -31,35 +23,52 @@ public class PublicModuleTest {
 
     @Before
     public void setUp() throws Exception {
-        //this.testHandler = TestHandler.getInstance();
-        //Assert.assertNotNull(this.testHandler);
+    	/*
+    	 * FOR INHOUSE TESTING PURPOSES BEGIN
+    	 */
+//        ArticleOperations articleOperations = new pm160695_ArticleOperations(); // Change this for your implementation (points will be negative if interfaces are not implemented).
+//        BuyerOperations buyerOperations = new pm160695_BuyerOperations();
+//        CityOperations cityOperations = new pm160695_CityOperations();
+//        GeneralOperations generalOperations = new pm160695_GeneralOperations();
+//        OrderOperations orderOperations = new pm160695_OrderOperations();
+//        ShopOperations shopOperations = new pm160695_ShopOperations();
+//        TransactionOperations transactionOperations = new pm160695_TransactionOperations();
+//        
+//        TestHandler.createInstance(
+//                articleOperations,
+//                buyerOperations,
+//                cityOperations,
+//                generalOperations,
+//                orderOperations,
+//                shopOperations,
+//                transactionOperations
+//        );
+        /*
+         * FOR INHOUSE TESTING PURPOSES END
+         */
+    	
+        this.testHandler = TestHandler.getInstance();
+        Assert.assertNotNull(this.testHandler);
 
-//        this.shopOperations = this.testHandler.getShopOperations();
-    	this.shopOperations = new pm160695_ShopOperations();
+        this.shopOperations = this.testHandler.getShopOperations();
         Assert.assertNotNull(this.shopOperations);
 
-//        this.cityOperations = this.testHandler.getCityOperations();
-        this.cityOperations = new pm160695_CityOperations();
+        this.cityOperations = this.testHandler.getCityOperations();
         Assert.assertNotNull(this.cityOperations);
 
-//        this.articleOperations = this.testHandler.getArticleOperations();
-        this.articleOperations = new pm160695_ArticleOperations();
+        this.articleOperations = this.testHandler.getArticleOperations();
         Assert.assertNotNull(this.articleOperations);
 
-//        this.buyerOperations = this.testHandler.getBuyerOperations();
-        this.buyerOperations = new pm160695_BuyerOperations();
+        this.buyerOperations = this.testHandler.getBuyerOperations();
         Assert.assertNotNull(this.buyerOperations);
 
-//        orderOperations = testHandler.getOrderOperations();
-        this.orderOperations = new pm160695_OrderOperations();
+        orderOperations = testHandler.getOrderOperations();
         Assert.assertNotNull(orderOperations);
 
-//        transactionOperations = testHandler.getTransactionOperations();
-        this.transactionOperations = new pm160695_TransactionOperations();
+        transactionOperations = testHandler.getTransactionOperations();
         Assert.assertNotNull(transactionOperations);
 
-//        generalOperations = testHandler.getGeneralOperations();
-        this.generalOperations = new pm160695_GeneralOperations();
+        generalOperations = testHandler.getGeneralOperations();
         Assert.assertNotNull(generalOperations);
 
         generalOperations.eraseAll();
@@ -117,6 +126,7 @@ public class PublicModuleTest {
         shopOperations.increaseArticleCount(sto, 10);
 
         int buyer = buyerOperations.createBuyer("kupac", cityB);
+        buyerOperations.increaseCredit(buyer, new BigDecimal("20000"));
         int order = buyerOperations.createOrder(buyer);
 
         orderOperations.addArticle(order, laptop, 5);
@@ -129,7 +139,6 @@ public class PublicModuleTest {
         orderOperations.completeOrder(order);
         Assert.assertTrue("sent".equals(orderOperations.getState(order)));
 
-        
         int buyerTransactionId = transactionOperations.getTransationsForBuyer(buyer).get(0);
         Assert.assertEquals(initialTime, transactionOperations.getTimeOfExecution(buyerTransactionId));
 
@@ -137,9 +146,9 @@ public class PublicModuleTest {
 
         //calculate ammounts - begin
         BigDecimal shopAAmount = new BigDecimal("5").multiply(new BigDecimal("1000")).setScale(3);
-        BigDecimal shopAAmountWithDiscount = new BigDecimal(0.8).multiply(shopAAmount).setScale(3, RoundingMode.HALF_UP);
+        BigDecimal shopAAmountWithDiscount = new BigDecimal("0.8").multiply(shopAAmount).setScale(3);
         BigDecimal shopC2Amount = new BigDecimal("4").multiply(new BigDecimal("200")).setScale(3);
-        BigDecimal shopC2AmountWithDiscount = new BigDecimal(0.5).multiply(shopC2Amount).setScale(3);
+        BigDecimal shopC2AmountWithDiscount = new BigDecimal("0.5").multiply(shopC2Amount).setScale(3);
         BigDecimal shopC3Amount = (new BigDecimal("10").multiply(new BigDecimal("100")))
                 .add(new BigDecimal("4").multiply(new BigDecimal("200"))).setScale(3);
         BigDecimal shopC3AmountWithDiscount = shopC3Amount;
@@ -147,19 +156,19 @@ public class PublicModuleTest {
         BigDecimal amountWithoutDiscounts = shopAAmount.add(shopC2Amount).add(shopC3Amount).setScale(3);
         BigDecimal amountWithDiscounts = shopAAmountWithDiscount.add(shopC2AmountWithDiscount).add(shopC3AmountWithDiscount).setScale(3);
 
-        BigDecimal systemProfit = amountWithDiscounts.multiply(new BigDecimal("0.05")).setScale(3);;
-        BigDecimal shopAAmountReal = shopAAmountWithDiscount.multiply(new BigDecimal("0.95")).setScale(3);;
-        BigDecimal shopC2AmountReal = shopC2AmountWithDiscount.multiply(new BigDecimal("0.95")).setScale(3);;
-        BigDecimal shopC3AmountReal = shopC3AmountWithDiscount.multiply(new BigDecimal("0.95")).setScale(3);;
+        BigDecimal systemProfit = amountWithDiscounts.multiply(new BigDecimal("0.05")).setScale(3);
+        BigDecimal shopAAmountReal = shopAAmountWithDiscount.multiply(new BigDecimal("0.95")).setScale(3);
+        BigDecimal shopC2AmountReal = shopC2AmountWithDiscount.multiply(new BigDecimal("0.95")).setScale(3);
+        BigDecimal shopC3AmountReal = shopC3AmountWithDiscount.multiply(new BigDecimal("0.95")).setScale(3);
         //calculate ammounts - end
 
         Assert.assertEquals(amountWithDiscounts, orderOperations.getFinalPrice(order));
         Assert.assertEquals(amountWithoutDiscounts.subtract(amountWithDiscounts), orderOperations.getDiscountSum(order));
 
         Assert.assertEquals(amountWithDiscounts, transactionOperations.getBuyerTransactionsAmmount(buyer));
-        Assert.assertEquals(BigDecimal.ZERO, transactionOperations.getShopTransactionsAmmount(shopA));
-        Assert.assertEquals(BigDecimal.ZERO, transactionOperations.getShopTransactionsAmmount(shopC2));
-        Assert.assertEquals(BigDecimal.ZERO, transactionOperations.getShopTransactionsAmmount(shopC3));
+        Assert.assertNull(transactionOperations.getShopTransactionsAmmount(shopA));
+        Assert.assertNull(transactionOperations.getShopTransactionsAmmount(shopC2));
+        Assert.assertNull(transactionOperations.getShopTransactionsAmmount(shopC3));
         Assert.assertEquals(BigDecimal.ZERO.setScale(3), transactionOperations.getSystemProfit());
 
         generalOperations.time(2);

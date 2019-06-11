@@ -8,14 +8,14 @@ import org.junit.runner.Result;
 public final class TestRunner
 {
     private static final int MAX_POINTS_ON_PUBLIC_TEST = 10;
-    private static final Class<?>[] UNIT_TEST_CLASSES = {
+    private static final Class[] UNIT_TEST_CLASSES = {
             BuyerOperationsTest.class, CityOperationsTest.class,
             GeneralOperationsTest.class, ShopOperationsTest.class
     };
 //    private static final Class[] UNIT_TEST_CLASSES_PRIVATE = {
 //            CourierRequestOperationTest.class, CourierOperationsTest.class };
 //
-    private static final Class<?>[] MODULE_TEST_CLASSES = { PublicModuleTest.class };
+    private static final Class[] MODULE_TEST_CLASSES = { PublicModuleTest.class };
 //    private static final Class[] MODULE_TEST_CLASSES_PRIVATE = { PrivateModuleTest.class };
 //
 //
@@ -25,7 +25,7 @@ public final class TestRunner
         double points=0;
         JUnitCore jUnitCore = new JUnitCore();
 
-        for (Class<?> testClass : UNIT_TEST_CLASSES) {
+        for (Class testClass : UNIT_TEST_CLASSES) {
             System.out.println("\n" + testClass.getName());
 
             Request request = Request.aClass(testClass);
@@ -50,7 +50,7 @@ public final class TestRunner
         double points=0;
         JUnitCore jUnitCore = new JUnitCore();
 
-        for (Class<?> testClass : MODULE_TEST_CLASSES) {
+        for (Class testClass : MODULE_TEST_CLASSES) {
             System.out.println("\n" + testClass.getName());
 
             Request request = Request.aClass(testClass);

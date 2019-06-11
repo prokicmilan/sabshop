@@ -3,7 +3,6 @@ package tests;
 import operations.BuyerOperations;
 import operations.CityOperations;
 import operations.GeneralOperations;
-
 import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
@@ -67,16 +66,16 @@ public class BuyerOperationsTest {
         int cityId = cityOperations.createCity("Kragujevac");
         int buyerId = buyerOperations.createBuyer("Pera", cityId);
 
-        BigDecimal credit1 = new BigDecimal("1000.000");
+        BigDecimal credit1 = new BigDecimal("1000.000").setScale(3);
 
         BigDecimal creditReturned = buyerOperations.increaseCredit(buyerId, credit1);
         Assert.assertEquals(credit1, creditReturned);
 
-        BigDecimal credit2 = new BigDecimal("500.000");
-        buyerOperations.increaseCredit(buyerId, credit2);
+        BigDecimal credit2 = new BigDecimal("500");
+        buyerOperations.increaseCredit(buyerId, credit2).setScale(3);
 
         creditReturned = buyerOperations.getCredit(buyerId);
-        Assert.assertEquals(credit1.add(credit2), creditReturned);
+        Assert.assertEquals(credit1.add(credit2).setScale(3), creditReturned);
     }
 
     @Test

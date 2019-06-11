@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<classpath>
+	<classpathentry kind="src" path="src"/>
+	<classpathentry kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER"/>
+	<classpathentry kind="lib" path="C:/Users/Proka/Documents/Projects/SabShop/lib/mssql-jdbc-7.2.2.jre8.jar"/>
+	<classpathentry kind="lib" path="C:/Users/Proka/Documents/Projects/SabShop/lib/junit-4.13-beta-3.jar"/>
+	<classpathentry kind="lib" path="C:/Users/Proka/Documents/Projects/SabShop/lib/hamcrest-core-1.3.jar"/>
+	<classpathentry kind="output" path="bin"/>
+</classpath>

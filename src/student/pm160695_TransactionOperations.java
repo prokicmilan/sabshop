@@ -42,7 +42,12 @@ public class pm160695_TransactionOperations extends OperationImplementation impl
 
 			List<BigDecimal> transactionAmountList = this.getStatementHandler().executeSelectListStatement(connection, selectQuery, parameters, BigDecimal.class);
 			
-			return transactionAmountList.stream().reduce(BigDecimal.ZERO, BigDecimal::add);
+			if (transactionAmountList.size() == 0) {
+				return null;
+			}
+			else {
+				return transactionAmountList.stream().reduce(BigDecimal.ZERO, BigDecimal::add);
+			}
 		} catch (SQLException e) {
 			e.printStackTrace();
 			return null;

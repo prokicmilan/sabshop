@@ -1,14 +1,15 @@
 package tests;
 
+import operations.BuyerOperations;
 import operations.CityOperations;
 import operations.GeneralOperations;
 import operations.ShopOperations;
-
 import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 
+import java.math.BigDecimal;
 import java.util.List;
 
 public class CityOperationsTest {

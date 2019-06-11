@@ -1,5 +1,6 @@
 package operations;
 
+import java.sql.Time;
 import java.util.Calendar;
 
 public interface GeneralOperations {
